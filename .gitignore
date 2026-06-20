@@ -27,3 +27,24 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# Python backend
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/**/*.pyo
+backend/**/*.pyd
+backend/.venv/
+backend/venv/
+backend/.env
+backend/.env.local
+backend/*.egg-info/
+backend/dist/
+backend/build/
+backend/.mypy_cache/
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/htmlcov/
+backend/.coverage
+backend/uploads/
+backend/tmp/

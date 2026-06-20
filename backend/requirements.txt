@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-multipart
+sqlalchemy
+asyncpg
+psycopg2-binary
+qdrant-client
+sentence-transformers
+pymupdf
+python-docx
+openpyxl
+python-pptx
+httpx
+python-jose[cryptography]
+python-dotenv

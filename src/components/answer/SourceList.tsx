@@ -14,6 +14,10 @@ export default function SourceList({ sources, onSelect }: SourceListProps) {
         <div key={source.id} className={styles.item} onClick={() => onSelect(source)}>
           <span className={styles.checkmark}>✓</span>
           <span className={styles.name}>{source.name}</span>
+          <span className={styles.badge} data-level={source.confidence.toLowerCase()}>
+            {source.confidence}
+          </span>
+          <span className={styles.score}>{source.score.toFixed(2)}</span>
         </div>
       ))}
     </div>
