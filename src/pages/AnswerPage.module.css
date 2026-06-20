@@ -1,0 +1,13 @@
+.container {
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+.searchWrapper {
+  margin-bottom: var(--space-6);
+}
+
+.loading {
+  color: var(--color-gray-500);
+  font-size: var(--text-sm);
+}

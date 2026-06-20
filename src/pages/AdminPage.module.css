@@ -1,0 +1,67 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.title {
+  margin-bottom: var(--space-6);
+}
+
+.section {
+  margin-bottom: var(--space-8);
+}
+
+.sectionTitle {
+  margin-bottom: var(--space-3);
+  color: var(--color-gray-700);
+}
+
+.dataSourceRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-gray-700);
+}
+
+.checkmark {
+  color: var(--color-success);
+}
+
+.syncNote {
+  font-size: var(--text-xs);
+  color: var(--color-gray-500);
+  margin-top: var(--space-2);
+}
+
+.userRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.userLabel {
+  font-size: var(--text-sm);
+  color: var(--color-gray-700);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.manageBtn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-gray-700);
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.manageBtn:hover {
+  background: var(--color-gray-100);
+  border-color: var(--color-gray-400);
+}

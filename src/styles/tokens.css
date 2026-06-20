@@ -1,0 +1,66 @@
+:root {
+  /* Brand */
+  --color-brand:        #1D4ED8;
+  --color-brand-hover:  #1E40AF;
+  --color-brand-light:  #EFF6FF;
+
+  /* Neutrals */
+  --color-gray-50:  #F9FAFB;
+  --color-gray-100: #F3F4F6;
+  --color-gray-200: #E5E7EB;
+  --color-gray-400: #9CA3AF;
+  --color-gray-500: #6B7280;
+  --color-gray-700: #374151;
+  --color-gray-900: #111827;
+
+  /* Semantic */
+  --color-success: #16A34A;
+  --color-danger:  #DC2626;
+  --color-warning: #D97706;
+
+  /* Surface */
+  --color-bg:      #FFFFFF;
+  --color-surface: #F9FAFB;
+  --color-border:  #E5E7EB;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+
+  --font-normal:   400;
+  --font-medium:   500;
+  --font-semibold: 600;
+
+  /* Spacing — 4px base grid */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
+
+  /* Layout */
+  --sidebar-width:  220px;
+  --history-width:  200px;
+  --content-max:    720px;
+}
