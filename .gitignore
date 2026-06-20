@@ -48,3 +48,8 @@ backend/htmlcov/
 backend/.coverage
 backend/uploads/
 backend/tmp/
+
+# Network drive agent build output (PyInstaller)
+backend/agent/dist/
+backend/agent/build/
+backend/agent/*.spec

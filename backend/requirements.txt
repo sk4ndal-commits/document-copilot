@@ -13,3 +13,5 @@ python-pptx
 httpx
 python-jose[cryptography]
 python-dotenv
+apscheduler
+watchdog
