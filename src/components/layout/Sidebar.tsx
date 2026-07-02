@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import styles from './Sidebar.module.css'
+import { useAuth } from '../../services/api/auth'
 
 const knowledgeBases = [
   'Quality Management',
@@ -11,6 +12,8 @@ const knowledgeBases = [
 ]
 
 export default function Sidebar() {
+  const { logout, user } = useAuth()
+
   return (
     <aside className={styles.sidebar}>
       <p className={styles.sectionLabel}>Knowledge Bases</p>
@@ -49,6 +52,16 @@ export default function Sidebar() {
       >
         Admin
       </NavLink>
+
+      <div className={styles.sidebarFooter}>
+        <div className={styles.userInfo}>
+          <p className={styles.userEmail}>{user?.sub}</p>
+          <p className={styles.tenantId}>{user?.tenant_id}</p>
+        </div>
+        <button onClick={logout} className={styles.logoutButton}>
+          Logout
+        </button>
+      </div>
     </aside>
   )
 }

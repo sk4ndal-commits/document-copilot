@@ -11,8 +11,8 @@ import os
 from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
-# Routes that don't require a tenant context (health check, docs)
-_PUBLIC_PATHS = {"/health", "/docs", "/openapi.json", "/redoc"}
+# Routes that don't require a tenant context (health check, docs, auth)
+_PUBLIC_PATHS = {"/health", "/docs", "/openapi.json", "/redoc", "/api/auth/login", "/api/auth/register"}
 
 
 def _decode_jwt_payload(token: str) -> dict | None:
@@ -23,8 +23,8 @@ def _decode_jwt_payload(token: str) -> dict | None:
     """
     try:
         from jose import jwt as jose_jwt
-        secret = os.getenv("JWT_SECRET", "")
-        algorithms = os.getenv("JWT_ALGORITHMS", "RS256").split(",")
+        secret = os.getenv("JWT_SECRET", "your-secret-key")
+        algorithms = os.getenv("JWT_ALGORITHMS", "RS256,HS256").split(",")
         return jose_jwt.decode(token, secret, algorithms=algorithms, options={"verify_aud": False})
     except Exception:
         # Dev fallback: decode payload segment without verification
@@ -65,7 +65,11 @@ class TenantMiddleware(BaseHTTPMiddleware):
             tenant_id = os.getenv("DEFAULT_TENANT_ID")
 
         if not tenant_id:
-            raise HTTPException(status_code=403, detail="No tenant context. Provide a valid Bearer token or X-Tenant-ID header.")
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "No tenant context. Provide a valid Bearer token or X-Tenant-ID header."}
+            )
 
         request.state.tenant_id = tenant_id
         request.state.roles = roles

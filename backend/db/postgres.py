@@ -48,6 +48,14 @@ class Message(Base):
     conversation = relationship("Conversation", back_populates="messages")
 
 
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    tenant_id = Column(String, nullable=False)  # Associates user with a tenant
+
+
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session

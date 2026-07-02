@@ -1,22 +1,43 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import AppShell from './components/layout/AppShell'
 import HomePage from './pages/HomePage'
 import AnswerPage from './pages/AnswerPage'
 import DocumentsPage from './pages/DocumentsPage'
 import AdminPage from './pages/AdminPage'
-import { AuthProvider } from './services/api/auth'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import { AuthProvider, useAuth } from './services/api/auth'
+
+function AuthenticatedApp() {
+  const { token } = useAuth();
+
+  if (!token) {
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
+
+  return (
+    <AppShell>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/answer" element={<AnswerPage />} />
+        <Route path="/documents" element={<DocumentsPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AppShell>
+  );
+}
 
 export default function App() {
   return (
     <AuthProvider>
-      <AppShell>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/answer" element={<AnswerPage />} />
-          <Route path="/documents" element={<DocumentsPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-        </Routes>
-      </AppShell>
+      <AuthenticatedApp />
     </AuthProvider>
   )
 }
