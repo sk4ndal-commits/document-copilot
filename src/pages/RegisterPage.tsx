@@ -25,7 +25,10 @@ export default function RegisterPage() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.detail || 'Registration failed');
+        const errorMessage = typeof data.detail === 'string'
+          ? data.detail
+          : (data.detail?.[0]?.msg || 'Registration failed');
+        throw new Error(errorMessage);
       }
 
       navigate('/login');

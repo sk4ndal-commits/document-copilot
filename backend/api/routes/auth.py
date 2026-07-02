@@ -7,6 +7,7 @@ import os
 import re
 from typing import Optional
 
+from pydantic import BaseModel, EmailStr
 from db.postgres import get_db, User
 from db.tenants import provision_tenant
 
@@ -23,6 +24,15 @@ except ImportError:
     pwd_context = DummyCryptContext()
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    tenant_name: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 SECRET_KEY = os.getenv("JWT_SECRET", "your-secret-key")
 ALGORITHM = "HS256"
@@ -45,7 +55,10 @@ def slugify(text: str) -> str:
     return text
 
 @router.post("/register")
-async def register(email: str, password: str, tenant_name: str, db: AsyncSession = Depends(get_db)):
+async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db)):
+    email = request.email
+    password = request.password
+    tenant_name = request.tenant_name
     # Check if user already exists
     result = await db.execute(select(User).where(User.email == email))
     if result.scalars().first():
@@ -71,7 +84,9 @@ async def register(email: str, password: str, tenant_name: str, db: AsyncSession
     return {"message": "User and tenant created successfully", "tenant_id": tenant_id}
 
 @router.post("/login")
-async def login(email: str, password: str, db: AsyncSession = Depends(get_db)):
+async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
+    email = request.email
+    password = request.password
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalars().first()
     

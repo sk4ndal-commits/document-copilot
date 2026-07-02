@@ -26,7 +26,10 @@ export default function LoginPage() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.detail || 'Login failed');
+        const errorMessage = typeof data.detail === 'string'
+          ? data.detail
+          : (data.detail?.[0]?.msg || 'Login failed');
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
