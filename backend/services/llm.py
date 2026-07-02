@@ -26,3 +26,35 @@ async def generate_answer(query: str, context_chunks: list[str]) -> str:
         )
         res.raise_for_status()
         return res.json()["choices"][0]["message"]["content"]
+
+
+async def generate_follow_up(query: str, answer: str) -> list[str]:
+    prompt = (
+        "Based on the original question and the answer provided, suggest exactly 3 short follow-up questions "
+        "that the user might want to ask next. Format as a simple list of questions, one per line.\n\n"
+        f"Original Question: {query}\n"
+        f"Answer: {answer}\n\n"
+        "Follow-up Questions:"
+    )
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            res = await client.post(
+                KIMI_API_URL,
+                json={
+                    "model": "kimi",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.5,
+                    "max_tokens": 256,
+                },
+            )
+            res.raise_for_status()
+            text = res.json()["choices"][0]["message"]["content"]
+            questions = [q.strip(" 123.-") for q in text.strip().split("\n") if q.strip()]
+            return questions[:3]
+    except Exception:
+        # Fallback to defaults if LLM fails or is slow
+        return [
+            "Can you explain that in more detail?",
+            "What are the next steps?",
+            "Where can I find more information?"
+        ]

@@ -1,7 +1,8 @@
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy import Column, String, Integer, DateTime, Enum as SAEnum
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Enum as SAEnum
+from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from models.schemas import DocumentStatus
 
@@ -25,6 +26,26 @@ class DocumentRecord(Base):
     size_bytes = Column(Integer, nullable=True)
     file_path = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class Conversation(Base):
+    __tablename__ = "conversations"
+    id = Column(String, primary_key=True)
+    tenant_id = Column(String, nullable=False)
+    user_id = Column(String, nullable=False)
+    title = Column(String, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
+
+
+class Message(Base):
+    __tablename__ = "messages"
+    id = Column(String, primary_key=True)
+    conversation_id = Column(String, ForeignKey("conversations.id"), nullable=False)
+    role = Column(String, nullable=False)  # 'user' or 'assistant'
+    content = Column(String, nullable=False)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    conversation = relationship("Conversation", back_populates="messages")
 
 
 async def get_db():

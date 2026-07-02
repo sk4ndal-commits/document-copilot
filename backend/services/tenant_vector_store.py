@@ -50,6 +50,8 @@ def upsert_chunks_for_tenant(
                 "knowledge_base": knowledge_base,
                 "text": chunk["text"],
                 "page_number": chunk.get("page_number"),
+                "start_offset": chunk.get("start_offset"),
+                "end_offset": chunk.get("end_offset"),
                 "required_role": required_role,
             },
         )

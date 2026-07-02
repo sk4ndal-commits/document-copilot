@@ -19,7 +19,8 @@ export async function fetchAnswer(query: string, knowledgeBase: string | null = 
   return {
     answer: data.answer,
     blocked: data.blocked,
-    sources: data.sources, // Assuming backend Source model matches frontend or is compatible
+    sources: data.sources,
+    followUpQuestions: data.follow_up_questions,
     modelUsed: data.model_used,
     latencyMs: data.latency_ms,
   }

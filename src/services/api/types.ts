@@ -2,6 +2,8 @@ export interface Chunk {
   chunkId: string
   text: string
   pageNumber?: number
+  startOffset?: number
+  endOffset?: number
   score: number
 }
 
@@ -13,12 +15,15 @@ export interface Source {
   score: number
   chunks: Chunk[]
   pageNumber?: number
+  startOffset?: number
+  endOffset?: number
 }
 
 export interface AnswerResult {
   answer: string | null
   blocked: boolean
   sources: Source[]
+  followUpQuestions?: string[]
   modelUsed?: string
   latencyMs?: number
 }
@@ -34,4 +39,18 @@ export interface Document {
   knowledgeBase: string
   pageCount?: number
   sizeBytes?: number
+}
+
+export interface Message {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: string
+}
+
+export interface Conversation {
+  id: string
+  title: string
+  createdAt: string
+  lastMessage?: string
 }

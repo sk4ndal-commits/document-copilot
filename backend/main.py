@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from db.postgres import init_db
-from api.routes import search, documents, admin
+from api.routes import search, documents, admin, history
 from api.routes import connectors as connectors_router
 from middleware.tenant import TenantMiddleware
 from connectors.sync_scheduler import start_scheduler, stop_scheduler, register_tenant
@@ -52,6 +52,7 @@ app.include_router(search.router,              prefix="/api")
 app.include_router(documents.router,           prefix="/api")
 app.include_router(admin.router,               prefix="/api")
 app.include_router(connectors_router.router,   prefix="/api")
+app.include_router(history.router,             prefix="/api/history", tags=["history"])
 
 
 @app.get("/health")

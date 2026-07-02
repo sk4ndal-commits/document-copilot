@@ -26,6 +26,7 @@ export default function SourcePanel({ source, onClose }: SourcePanelProps) {
           <div key={chunk.chunkId} className={styles.chunk}>
             <p className={styles.chunkLabel}>
               Chunk {i + 1}{chunk.pageNumber != null ? ` — Page ${chunk.pageNumber}` : ''}
+              {chunk.startOffset != null && ` — Offsets: [${chunk.startOffset}, ${chunk.endOffset}]`}
               <span className={styles.chunkScore}>{chunk.score.toFixed(2)}</span>
             </p>
             <p className={styles.chunkText}>{chunk.text}</p>

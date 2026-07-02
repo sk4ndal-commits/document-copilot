@@ -33,7 +33,14 @@ def _extract_pdf(file_path: str) -> list[dict]:
     for i, page in enumerate(doc):
         text = page.get_text().strip()
         if text:
-            pages.append({"text": text, "page_number": i + 1})
+            # We track character range within the page. 
+            # In a full RAG we might track global offsets across the document.
+            pages.append({
+                "text": text, 
+                "page_number": i + 1,
+                "start_offset": 0,
+                "end_offset": len(text)
+            })
     return pages
 
 

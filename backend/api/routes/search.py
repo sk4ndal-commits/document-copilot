@@ -6,7 +6,7 @@ from db.postgres import get_db
 from models.schemas import SearchRequest, AnswerResult, Source, Chunk
 from services.embeddings import embed
 from services.tenant_vector_store import search_for_tenant
-from services.llm import generate_answer
+from services.llm import generate_answer, generate_follow_up
 
 router = APIRouter()
 
@@ -40,6 +40,9 @@ async def search(req: SearchRequest, request: Request, db: AsyncSession = Depend
 
     context_chunks = [hit.payload["text"] for hit in authorized_hits]
     answer_text = await generate_answer(req.query, context_chunks)
+    
+    # Generate follow-up questions
+    follow_ups = await generate_follow_up(req.query, answer_text)
 
     sources = []
     for doc_id, doc_hits in docs.items():
@@ -53,11 +56,15 @@ async def search(req: SearchRequest, request: Request, db: AsyncSession = Depend
             confidence=confidence,
             score=round(score, 3),
             page_number=top_hit.payload.get("page_number"),
+            start_offset=top_hit.payload.get("start_offset"),
+            end_offset=top_hit.payload.get("end_offset"),
             chunks=[
                 Chunk(
                     chunk_id=str(h.id),
                     text=h.payload["text"],
                     page_number=h.payload.get("page_number"),
+                    start_offset=h.payload.get("start_offset"),
+                    end_offset=h.payload.get("end_offset"),
                     score=round(h.score, 3),
                 )
                 for h in doc_hits
@@ -68,6 +75,7 @@ async def search(req: SearchRequest, request: Request, db: AsyncSession = Depend
         answer=answer_text,
         blocked=False,
         sources=sources,
+        follow_up_questions=follow_ups,
         model_used="kimi",
         latency_ms=int((time.time() - t0) * 1000),
     )

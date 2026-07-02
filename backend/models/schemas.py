@@ -1,6 +1,7 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
+from datetime import datetime
 
 
 class DocumentStatus(str, Enum):
@@ -18,6 +19,8 @@ class Chunk(BaseModel):
     chunk_id: str
     text: str
     page_number: Optional[int] = None
+    start_offset: Optional[int] = None
+    end_offset: Optional[int] = None
     score: float
 
 
@@ -29,12 +32,15 @@ class Source(BaseModel):
     score: float
     chunks: list[Chunk]
     page_number: Optional[int] = None
+    start_offset: Optional[int] = None
+    end_offset: Optional[int] = None
 
 
 class AnswerResult(BaseModel):
     answer: Optional[str] = None
     blocked: bool = False
     sources: list[Source]
+    follow_up_questions: list[str] = []
     model_used: Optional[str] = None
     latency_ms: Optional[int] = None
 
@@ -60,3 +66,28 @@ class UploadResponse(BaseModel):
 class AdminStatus(BaseModel):
     data_sources: list[dict]
     last_sync: str
+
+
+class MessageOut(BaseModel):
+    id: str
+    role: str
+    content: str
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ConversationOut(BaseModel):
+    id: str
+    title: str
+    created_at: datetime
+    last_message: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ChatHistoryRequest(BaseModel):
+    conversation_id: Optional[str] = None
+    message: str

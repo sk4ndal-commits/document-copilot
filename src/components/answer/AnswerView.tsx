@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AnswerResult, Source } from '../../services/api'
 import SourceList from './SourceList'
 import SourcePanel from './SourcePanel'
@@ -11,6 +12,11 @@ interface AnswerViewProps {
 export default function AnswerView({ result }: AnswerViewProps) {
   const [selectedSource, setSelectedSource] = useState<Source | null>(null)
   const [showSources, setShowSources] = useState(false)
+  const navigate = useNavigate()
+
+  const handleFollowUp = (q: string) => {
+    navigate(`/answer?q=${encodeURIComponent(q)}`)
+  }
 
   if (result.blocked) {
     return (
@@ -29,6 +35,23 @@ export default function AnswerView({ result }: AnswerViewProps) {
         <p className={styles.cardTitle}>Answer</p>
         <p className={styles.answerText}>{result.answer}</p>
       </div>
+
+      {result.followUpQuestions && result.followUpQuestions.length > 0 && (
+        <div className={styles.followUpContainer}>
+          <p className={styles.followUpLabel}>Suggested Follow-ups:</p>
+          <div className={styles.followUpList}>
+            {result.followUpQuestions.map((q, idx) => (
+              <button 
+                key={idx} 
+                className={styles.followUpBtn} 
+                onClick={() => handleFollowUp(q)}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <button className={styles.showSourcesBtn} onClick={() => setShowSources(s => !s)}>
         {showSources ? 'Hide Sources' : 'Show Sources'}
