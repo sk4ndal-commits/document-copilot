@@ -15,9 +15,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 _PUBLIC_PATHS = {"/health", "/docs", "/openapi.json", "/redoc"}
 
 
-def _decode_jwt_tenant(token: str) -> str | None:
+def _decode_jwt_payload(token: str) -> dict | None:
     """
-    Decode the JWT and extract the tenant_id claim.
+    Decode the JWT and return the full payload.
     Uses python-jose when available; falls back to a simple base64 decode
     so the middleware works even without Keycloak in development.
     """
@@ -25,8 +25,7 @@ def _decode_jwt_tenant(token: str) -> str | None:
         from jose import jwt as jose_jwt
         secret = os.getenv("JWT_SECRET", "")
         algorithms = os.getenv("JWT_ALGORITHMS", "RS256").split(",")
-        payload = jose_jwt.decode(token, secret, algorithms=algorithms, options={"verify_aud": False})
-        return payload.get("tenant_id") or payload.get("tid")
+        return jose_jwt.decode(token, secret, algorithms=algorithms, options={"verify_aud": False})
     except Exception:
         # Dev fallback: decode payload segment without verification
         import base64, json
@@ -35,8 +34,7 @@ def _decode_jwt_tenant(token: str) -> str | None:
             if len(parts) != 3:
                 return None
             padded = parts[1] + "=" * (-len(parts[1]) % 4)
-            payload = json.loads(base64.urlsafe_b64decode(padded))
-            return payload.get("tenant_id") or payload.get("tid")
+            return json.loads(base64.urlsafe_b64decode(padded))
         except Exception:
             return None
 
@@ -47,12 +45,16 @@ class TenantMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         tenant_id: str | None = None
+        roles: list[str] = []
 
         # 1. Try JWT Bearer token
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
             token = auth_header[len("Bearer "):]
-            tenant_id = _decode_jwt_tenant(token)
+            payload = _decode_jwt_payload(token)
+            if payload:
+                tenant_id = payload.get("tenant_id") or payload.get("tid")
+                roles = payload.get("roles", [])
 
         # 2. Fallback: explicit header (for agent / service-to-service)
         if not tenant_id:
@@ -66,4 +68,5 @@ class TenantMiddleware(BaseHTTPMiddleware):
             raise HTTPException(status_code=403, detail="No tenant context. Provide a valid Bearer token or X-Tenant-ID header.")
 
         request.state.tenant_id = tenant_id
+        request.state.roles = roles
         return await call_next(request)

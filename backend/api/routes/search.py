@@ -1,33 +1,44 @@
 import time
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.postgres import get_db
 from models.schemas import SearchRequest, AnswerResult, Source, Chunk
 from services.embeddings import embed
-from services.vector_store import search as qdrant_search
+from services.tenant_vector_store import search_for_tenant
 from services.llm import generate_answer
 
 router = APIRouter()
 
 
 @router.post("/search", response_model=AnswerResult)
-async def search(req: SearchRequest, db: AsyncSession = Depends(get_db)):
+async def search(req: SearchRequest, request: Request, db: AsyncSession = Depends(get_db)):
     t0 = time.time()
+    tenant_id = request.state.tenant_id
+    user_roles = request.state.roles
 
     query_vector = embed([req.query])[0]
-    hits = qdrant_search(query_vector, top_k=5, knowledge_base=req.knowledge_base)
+    hits = search_for_tenant(tenant_id, query_vector, top_k=5, knowledge_base=req.knowledge_base)
 
     if not hits:
         return AnswerResult(answer=None, blocked=False, sources=[], latency_ms=0)
 
+    # Filter hits by user permissions
+    authorized_hits = [
+        hit for hit in hits
+        if not hit.payload.get("required_role") or hit.payload.get("required_role") in user_roles
+    ]
+
+    if not authorized_hits:
+        return AnswerResult(answer="I found some results but you don't have permission to see them.", blocked=True, sources=[], latency_ms=int((time.time() - t0) * 1000))
+
     # Group chunks by document
     docs: dict[str, list] = {}
-    for hit in hits:
+    for hit in authorized_hits:
         doc_id = hit.payload["doc_id"]
         docs.setdefault(doc_id, []).append(hit)
 
-    context_chunks = [hit.payload["text"] for hit in hits]
+    context_chunks = [hit.payload["text"] for hit in authorized_hits]
     answer_text = await generate_answer(req.query, context_chunks)
 
     sources = []

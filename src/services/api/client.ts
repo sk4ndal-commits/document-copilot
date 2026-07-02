@@ -15,8 +15,15 @@ export async function apiFetch(url: string, options: RequestInit = {}): Promise<
     headers['Content-Type'] = 'application/json'
   }
 
-  return fetch(url, {
+  const response = await fetch(url, {
     ...options,
     headers,
   })
+
+  if (response.status === 401) {
+    localStorage.removeItem('auth_token')
+    window.location.href = '/' // Simple redirect to home/login
+  }
+
+  return response
 }

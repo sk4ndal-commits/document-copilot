@@ -35,6 +35,7 @@ def upsert_chunks_for_tenant(
     knowledge_base: str,
     chunks: list[dict],
     vectors: list[list[float]],
+    required_role: str | None = None,
 ) -> None:
     client = _get_client()
     collection = _collection(tenant_id)
@@ -49,6 +50,7 @@ def upsert_chunks_for_tenant(
                 "knowledge_base": knowledge_base,
                 "text": chunk["text"],
                 "page_number": chunk.get("page_number"),
+                "required_role": required_role,
             },
         )
         for chunk, vec in zip(chunks, vectors)

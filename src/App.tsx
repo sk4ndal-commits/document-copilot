@@ -4,16 +4,19 @@ import HomePage from './pages/HomePage'
 import AnswerPage from './pages/AnswerPage'
 import DocumentsPage from './pages/DocumentsPage'
 import AdminPage from './pages/AdminPage'
+import { AuthProvider } from './services/api/auth'
 
 export default function App() {
   return (
-    <AppShell>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/answer" element={<AnswerPage />} />
-        <Route path="/documents" element={<DocumentsPage />} />
-        <Route path="/admin" element={<AdminPage />} />
-      </Routes>
-    </AppShell>
+    <AuthProvider>
+      <AppShell>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/answer" element={<AnswerPage />} />
+          <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+        </Routes>
+      </AppShell>
+    </AuthProvider>
   )
 }
