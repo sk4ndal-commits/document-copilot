@@ -68,6 +68,18 @@ class AdminStatus(BaseModel):
     last_sync: str
 
 
+class AdminMetrics(BaseModel):
+    search_activity: int
+    ai_usage_tokens: int
+    storage_bytes: int
+
+
+class UserOut(BaseModel):
+    id: str
+    username: str
+    roles: list[str]
+
+
 class MessageOut(BaseModel):
     id: str
     role: str
