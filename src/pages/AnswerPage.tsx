@@ -3,7 +3,6 @@ import { useEffect } from 'react'
 import { useSearch } from '../hooks/useSearch'
 import AnswerView from '../components/answer/AnswerView'
 import SearchBar from '../components/search/SearchBar'
-import styles from './AnswerPage.module.css'
 
 export default function AnswerPage() {
   const [searchParams] = useSearchParams()
@@ -18,11 +17,11 @@ export default function AnswerPage() {
   const handleNewSearch = (q: string) => navigate(`/answer?q=${encodeURIComponent(q)}`)
 
   return (
-    <div className={styles.container}>
-      <div className={styles.searchWrapper}>
+    <div className="max-w-[var(--content-max)] mx-auto">
+      <div className="mb-6">
         <SearchBar onSearch={handleNewSearch} initialValue={query} />
       </div>
-      {loading && <p className={styles.loading}>Searching...</p>}
+      {loading && <p className="text-gray-500 text-sm">Searching...</p>}
       {result && <AnswerView result={result} />}
     </div>
   )

@@ -1,4 +1,3 @@
-import styles from './AdminPage.module.css'
 import { useState, useEffect } from 'react'
 import { fetchAdminStatus, fetchAdminMetrics, fetchAdminUsers, AdminStatus, AdminMetrics, User } from '../services/api'
 
@@ -27,50 +26,52 @@ export default function AdminPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  if (loading) return <div className={styles.container}>Loading admin data...</div>
+  if (loading) return <div className="max-w-[600px] mx-auto">Loading admin data...</div>
 
   return (
-    <div className={styles.container}>
-      <h2 className={styles.title}>Admin Portal</h2>
+    <div className="max-w-[600px] mx-auto">
+      <h2 className="text-xl font-bold mb-6">Admin Portal</h2>
 
-      <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>Dashboard Metrics</h3>
-        <div className={styles.metricsGrid}>
-          <div className={styles.metricCard}>
-            <p className={styles.metricLabel}>Search Activity</p>
-            <p className={styles.metricValue}>{metrics?.search_activity}</p>
+      <section className="mb-8">
+        <h3 className="text-lg font-semibold mb-3 text-gray-700">Dashboard Metrics</h3>
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-gray-50 border border-border rounded-md p-4 text-center">
+            <p className="text-[10px] text-gray-500 mb-1">Search Activity</p>
+            <p className="text-lg font-semibold text-gray-900">{metrics?.search_activity}</p>
           </div>
-          <div className={styles.metricCard}>
-            <p className={styles.metricLabel}>AI Usage (Estimated Tokens)</p>
-            <p className={styles.metricValue}>{metrics?.ai_usage_tokens}</p>
+          <div className="bg-gray-50 border border-border rounded-md p-4 text-center">
+            <p className="text-[10px] text-gray-500 mb-1">AI Usage (Tokens)</p>
+            <p className="text-lg font-semibold text-gray-900">{metrics?.ai_usage_tokens}</p>
           </div>
-          <div className={styles.metricCard}>
-            <p className={styles.metricLabel}>Document Storage</p>
-            <p className={styles.metricValue}>{formatBytes(metrics?.storage_bytes || 0)}</p>
+          <div className="bg-gray-50 border border-border rounded-md p-4 text-center">
+            <p className="text-[10px] text-gray-500 mb-1">Document Storage</p>
+            <p className="text-lg font-semibold text-gray-900">{formatBytes(metrics?.storage_bytes || 0)}</p>
           </div>
         </div>
       </section>
 
-      <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>Data Sources</h3>
+      <section className="mb-8">
+        <h3 className="text-lg font-semibold mb-3 text-gray-700">Data Sources</h3>
         {status?.data_sources.map(ds => (
-          <div key={ds.name} className={styles.dataSourceRow}>
-            <span className={styles.checkmark}>{ds.connected ? '✓' : '✗'}</span>
+          <div key={ds.name} className="flex items-center gap-2 mb-2 text-sm text-gray-700">
+            <span className="text-green-600 font-bold">{ds.connected ? '✓' : '✗'}</span>
             <span>{ds.name} {ds.connected ? 'Connected' : 'Disconnected'}</span>
           </div>
         ))}
-        <p className={styles.syncNote}>Last Sync: {status?.last_sync}</p>
+        <p className="text-[10px] text-gray-500 mt-2">Last Sync: {status?.last_sync}</p>
       </section>
 
-      <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>Users &amp; Permissions</h3>
+      <section className="mb-8">
+        <h3 className="text-lg font-semibold mb-3 text-gray-700">Users &amp; Permissions</h3>
         {users.map(user => (
-          <div key={user.id} className={styles.userRow}>
-            <span className={styles.userLabel}>
-              <span className={styles.checkmark}>✓</span>
+          <div key={user.id} className="flex justify-between items-center py-3 border-b border-gray-100">
+            <span className="text-sm text-gray-700 flex items-center gap-2">
+              <span className="text-green-600 font-bold">✓</span>
               {user.username} ({user.roles.join(', ')})
             </span>
-            <button className={styles.manageBtn}>Manage Roles</button>
+            <button className="bg-transparent border border-border rounded-sm px-4 py-0.5 text-[10px] text-gray-700 transition-all duration-150 hover:bg-gray-100 hover:border-gray-400">
+              Manage Roles
+            </button>
           </div>
         ))}
       </section>

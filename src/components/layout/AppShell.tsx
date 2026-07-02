@@ -1,7 +1,6 @@
 import { ReactNode } from 'react'
 import Sidebar from './Sidebar'
 import ChatHistory from '../history/ChatHistory'
-import styles from './AppShell.module.css'
 
 interface AppShellProps {
   children: ReactNode
@@ -9,9 +8,9 @@ interface AppShellProps {
 
 export default function AppShell({ children }: AppShellProps) {
   return (
-    <div className={styles.shell}>
+    <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <main className={styles.main}>{children}</main>
+      <main className="flex-1 overflow-y-auto p-8 bg-bg">{children}</main>
       <ChatHistory />
     </div>
   )
