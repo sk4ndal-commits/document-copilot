@@ -26,18 +26,28 @@ async def ingest_document(
     When tenant_id is provided the document is stored in the tenant-isolated
     Qdrant collection (tenant_<tenant_id>) instead of the shared collection.
     """
-    from db.postgres import DocumentRecord
-    from sqlalchemy import select
+    from db.tenants import get_tenant_document, upsert_tenant_document
 
     async def _set_status(status: DocumentStatus, page_count: int | None = None) -> None:
-        result = await db_session.execute(select(DocumentRecord).where(DocumentRecord.id == doc_id))
-        record = result.scalar_one_or_none()
-        if record:
-            record.status = status
-            if page_count is not None:
-                record.page_count = page_count
-                record.updated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-            await db_session.commit()
+        if tenant_id:
+            record = await get_tenant_document(db_session, tenant_id, doc_id)
+            if record:
+                record["status"] = status
+                if page_count is not None:
+                    record["page_count"] = page_count
+                record["updated_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                await upsert_tenant_document(db_session, tenant_id, record)
+        else:
+            from db.postgres import DocumentRecord
+            from sqlalchemy import select
+            result = await db_session.execute(select(DocumentRecord).where(DocumentRecord.id == doc_id))
+            record = result.scalar_one_or_none()
+            if record:
+                record.status = status
+                if page_count is not None:
+                    record.page_count = page_count
+                    record.updated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                await db_session.commit()
 
     try:
         pages = extract_text(file_path, mime_type)

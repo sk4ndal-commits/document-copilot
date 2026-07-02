@@ -76,6 +76,18 @@ async def get_tenant_document(session: AsyncSession, tenant_id: str, doc_id: str
 
 async def upsert_tenant_document(session: AsyncSession, tenant_id: str, doc: dict) -> None:
     schema = schema_name(tenant_id)
+    # Ensure all required bind parameters are present for the SQL query
+    params = {
+        "id": doc.get("id"),
+        "name": doc.get("name"),
+        "version": doc.get("version", "v1"),
+        "updated_at": doc.get("updated_at"),
+        "status": doc.get("status"),
+        "knowledge_base": doc.get("knowledge_base"),
+        "page_count": doc.get("page_count"),
+        "size_bytes": doc.get("size_bytes"),
+        "file_path": doc.get("file_path"),
+    }
     await session.execute(
         text(f"""
             INSERT INTO {schema}.documents
@@ -92,7 +104,7 @@ async def upsert_tenant_document(session: AsyncSession, tenant_id: str, doc: dic
                 size_bytes     = EXCLUDED.size_bytes,
                 file_path      = EXCLUDED.file_path
         """),
-        doc,
+        params,
     )
     await session.commit()
 

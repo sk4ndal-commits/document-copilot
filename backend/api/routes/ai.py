@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.postgres import get_db, DocumentRecord
-from sqlalchemy import select
+from db.postgres import get_db
+from db.tenants import get_tenant_document
 from models.schemas import SummaryResponse, ComparisonRequest, ComparisonResponse
 from services.tenant_vector_store import get_document_full_text_for_tenant
 from services.llm import generate_summary, compare_docs
@@ -14,10 +14,8 @@ router = APIRouter()
 async def summarize_document(doc_id: str, request: Request, db: AsyncSession = Depends(get_db)):
     tenant_id = request.state.tenant_id
     
-    # 1. Verify document exists and belongs to tenant (implicit by tenant-isolated Qdrant)
-    # But let's check Postgres for extra safety
-    result = await db.execute(select(DocumentRecord).where(DocumentRecord.id == doc_id))
-    record = result.scalar_one_or_none()
+    # 1. Verify document exists and belongs to tenant
+    record = await get_tenant_document(db, tenant_id, doc_id)
     if not record:
         raise HTTPException(status_code=404, detail="Document not found")
     
