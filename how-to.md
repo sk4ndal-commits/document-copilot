@@ -37,7 +37,7 @@ This command will:
 
 Once the containers are running, you can access the application at:
 
-- **Frontend UI**: [http://localhost](http://localhost)
+- **Frontend UI**: [http://localhost:8080](http://localhost:8080)
 - **Backend API**: [http://localhost:8000](http://localhost:8000)
 - **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
