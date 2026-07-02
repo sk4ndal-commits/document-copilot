@@ -80,6 +80,19 @@ class UserOut(BaseModel):
     roles: list[str]
 
 
+class SummaryResponse(BaseModel):
+    summary: str
+
+
+class ComparisonRequest(BaseModel):
+    doc_id_a: str
+    doc_id_b: str
+
+
+class ComparisonResponse(BaseModel):
+    comparison: str
+
+
 class MessageOut(BaseModel):
     id: str
     role: str

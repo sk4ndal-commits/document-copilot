@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { fetchDocuments, uploadDocument, deleteDocument, fetchIngestionStatus, Document, DocumentStatus } from '../services/api/index'
+import {
+  fetchDocuments,
+  uploadDocument,
+  deleteDocument,
+  fetchIngestionStatus,
+  summarizeDocument,
+  compareDocuments,
+  Document,
+  DocumentStatus,
+} from '../services/api/index'
 import styles from './DocumentsPage.module.css'
 
 const KNOWLEDGE_BASES = [
@@ -34,6 +43,11 @@ export default function DocumentsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [selectedKB, setSelectedKB] = useState(KNOWLEDGE_BASES[0])
   const [uploading, setUploading] = useState(false)
+  const [summarizing, setSummarizing] = useState<string | null>(null)
+  const [summary, setSummary] = useState<string | null>(null)
+  const [comparing, setComparing] = useState(false)
+  const [selectedForCompare, setSelectedForCompare] = useState<string[]>([])
+  const [comparison, setComparison] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -85,6 +99,39 @@ export default function DocumentsPage() {
     setDocs(prev => prev.filter(d => d.id !== id))
   }
 
+  const handleSummarize = async (id: string) => {
+    setSummarizing(id)
+    try {
+      const res = await summarizeDocument(id)
+      setSummary(res)
+    } catch (err) {
+      console.error(err)
+      alert('Failed to summarize document')
+    } finally {
+      setSummarizing(null)
+    }
+  }
+
+  const handleCompare = async () => {
+    if (selectedForCompare.length !== 2) return
+    setComparing(true)
+    try {
+      const res = await compareDocuments(selectedForCompare[0], selectedForCompare[1])
+      setComparison(res)
+    } catch (err) {
+      console.error(err)
+      alert('Failed to compare documents')
+    } finally {
+      setComparing(false)
+    }
+  }
+
+  const toggleCompareSelect = (id: string) => {
+    setSelectedForCompare(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id].slice(-2)
+    )
+  }
+
   const filtered = docs.filter(d =>
     d.name.toLowerCase().includes(search.toLowerCase()) ||
     d.knowledgeBase.toLowerCase().includes(search.toLowerCase())
@@ -94,9 +141,16 @@ export default function DocumentsPage() {
     <div className={styles.container}>
       <div className={styles.topBar}>
         <h2 className={styles.title}>Document Center</h2>
-        <button className={styles.uploadBtn} onClick={() => setShowUpload(true)}>
-          + Upload Document
-        </button>
+        <div className={styles.topActions}>
+          {selectedForCompare.length === 2 && (
+            <button className={styles.compareBtn} onClick={handleCompare} disabled={comparing}>
+              {comparing ? 'Comparing...' : 'Compare Selected'}
+            </button>
+          )}
+          <button className={styles.uploadBtn} onClick={() => setShowUpload(true)}>
+            + Upload Document
+          </button>
+        </div>
       </div>
 
       <input
@@ -157,9 +211,28 @@ export default function DocumentsPage() {
         </div>
       )}
 
+      {(summary || comparison) && (
+        <div className={styles.uploadModal}>
+          <div className={styles.uploadCard}>
+            <div className={styles.uploadHeader}>
+              <h3 className={styles.uploadTitle}>{summary ? 'Document Summary' : 'Document Comparison'}</h3>
+              <button className={styles.closeBtn} onClick={() => { setSummary(null); setComparison(null) }}>✕</button>
+            </div>
+            <div className={styles.aiContent}>
+              <pre className={styles.preWrap}>{summary || comparison}</pre>
+            </div>
+            <div className={styles.uploadActions}>
+              <button className={styles.confirmBtn} onClick={() => { setSummary(null); setComparison(null) }}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={styles.docList}>
         {filtered.map(doc => (
-          <div key={doc.id} className={styles.docRow}>
+          <div key={doc.id} className={`${styles.docRow} ${selectedForCompare.includes(doc.id) ? styles.selectedRow : ''}`}>
             <div className={styles.docInfo}>
               <span className={styles.docName}>{doc.name}</span>
               <span className={styles.docMeta}>
@@ -171,8 +244,20 @@ export default function DocumentsPage() {
             <div className={styles.docRight}>
               <StatusBadge status={doc.status} />
               <div className={styles.actions}>
-                <button className={styles.actionBtn} disabled={doc.status !== 'ready'}>Replace</button>
-                <button className={styles.actionBtn} disabled={doc.status !== 'ready'}>History</button>
+                <button
+                  className={styles.actionBtn}
+                  disabled={doc.status !== 'ready' || summarizing === doc.id}
+                  onClick={() => handleSummarize(doc.id)}
+                >
+                  {summarizing === doc.id ? '...' : 'Summarize'}
+                </button>
+                <button
+                  className={styles.actionBtn}
+                  disabled={doc.status !== 'ready'}
+                  onClick={() => toggleCompareSelect(doc.id)}
+                >
+                  {selectedForCompare.includes(doc.id) ? 'Deselect' : 'Compare'}
+                </button>
                 <button className={styles.actionBtnDanger} onClick={() => handleDelete(doc.id)}>Delete</button>
               </div>
             </div>

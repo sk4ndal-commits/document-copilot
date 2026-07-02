@@ -90,3 +90,26 @@ def search_for_tenant(
         limit=top_k,
         query_filter=query_filter,
     )
+
+
+def get_document_full_text_for_tenant(tenant_id: str, doc_id: str) -> str:
+    """Retrieve all chunks for a document and join them.
+    Used for summarization and comparison.
+    """
+    client = _get_client()
+    collection = _collection(tenant_id)
+
+    # Scroll through all points for this doc_id
+    points, _ = client.scroll(
+        collection_name=collection,
+        scroll_filter=Filter(
+            must=[FieldCondition(key="doc_id", match=MatchValue(value=doc_id))]
+        ),
+        limit=1000,
+        with_payload=True,
+    )
+
+    # Sort by page and offset if available
+    points.sort(key=lambda p: (p.payload.get("page_number") or 0, p.payload.get("start_offset") or 0))
+
+    return "\n".join(p.payload["text"] for p in points)

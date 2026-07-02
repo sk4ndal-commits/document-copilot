@@ -58,3 +58,46 @@ async def generate_follow_up(query: str, answer: str) -> list[str]:
             "What are the next steps?",
             "Where can I find more information?"
         ]
+
+
+async def generate_summary(text: str) -> str:
+    prompt = (
+        "Summarize the following document content in 5 key bullet points. "
+        "Be concise and capture the most important information.\n\n"
+        f"Content:\n{text}\n\n"
+        "Summary:"
+    )
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        res = await client.post(
+            KIMI_API_URL,
+            json={
+                "model": "kimi",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.3,
+                "max_tokens": 512,
+            },
+        )
+        res.raise_for_status()
+        return res.json()["choices"][0]["message"]["content"]
+
+
+async def compare_docs(doc_a_text: str, doc_b_text: str) -> str:
+    prompt = (
+        "Compare the following two documents. Highlight key similarities and differences "
+        "in terms of content, dates, and obligations. Use bullet points.\n\n"
+        f"Document A:\n{doc_a_text}\n\n"
+        f"Document B:\n{doc_b_text}\n\n"
+        "Comparison:"
+    )
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        res = await client.post(
+            KIMI_API_URL,
+            json={
+                "model": "kimi",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.3,
+                "max_tokens": 1024,
+            },
+        )
+        res.raise_for_status()
+        return res.json()["choices"][0]["message"]["content"]
