@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { fetchAnswer, AnswerResult } from '../services/api'
+import { fetchAnswer, AnswerResult } from '../services/api/index'
 
 export function useSearch() {
   const [result, setResult] = useState<AnswerResult | null>(null)

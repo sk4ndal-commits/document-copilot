@@ -1,4 +1,4 @@
-import { Source } from '../../services/api'
+import { Source } from '../../services/api/index'
 import styles from './SourceList.module.css'
 
 interface SourceListProps {

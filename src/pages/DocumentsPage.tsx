@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { fetchDocuments, uploadDocument, deleteDocument, fetchIngestionStatus, Document, DocumentStatus } from '../services/api'
+import { fetchDocuments, uploadDocument, deleteDocument, fetchIngestionStatus, Document, DocumentStatus } from '../services/api/index'
 import styles from './DocumentsPage.module.css'
 
 const KNOWLEDGE_BASES = [
