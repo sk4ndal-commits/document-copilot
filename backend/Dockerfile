@@ -23,6 +23,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Expose the port FastAPI runs on
+# Pre-download the embedding model
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-large-en-v1.5')"
+
 EXPOSE 8000
 
 # Command to run the application

@@ -32,6 +32,8 @@ services:
       - qdrant
     ports:
       - "8000:8000"
+    volumes:
+      - hf_cache:/root/.cache/huggingface
 
   # Frontend UI
   frontend:
@@ -44,3 +46,4 @@ services:
 volumes:
   postgres_data:
   qdrant_data:
+  hf_cache:
