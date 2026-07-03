@@ -8,12 +8,18 @@ Every request handler can then read:  request.state.tenant_id
 """
 
 import os
-from fastapi import Request, HTTPException
+import time
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+from sqlalchemy import text
+from db.postgres import engine
 
 # Routes that don't require a tenant context (health check, docs, auth)
 _PUBLIC_PATHS = {"/health", "/docs", "/openapi.json", "/redoc", "/api/auth/login", "/api/auth/register"}
 
+# Simple cache for verified tenants: {tenant_id: expiry_timestamp}
+_VERIFIED_TENANTS_CACHE = {}
+CACHE_TTL = 300  # 5 minutes
 
 def _decode_jwt_payload(token: str) -> dict | None:
     """
@@ -38,6 +44,30 @@ def _decode_jwt_payload(token: str) -> dict | None:
         except Exception:
             return None
 
+async def _verify_schema_exists(tenant_id: str) -> bool:
+    """Check if the tenant's PostgreSQL schema exists."""
+    from db.tenants import schema_name
+    schema = schema_name(tenant_id)
+    
+    # Check cache first
+    now = time.time()
+    if tenant_id in _VERIFIED_TENANTS_CACHE:
+        if now < _VERIFIED_TENANTS_CACHE[tenant_id]:
+            return True
+
+    try:
+        async with engine.connect() as conn:
+            result = await conn.execute(
+                text("SELECT schema_name FROM information_schema.schemata WHERE schema_name = :s"),
+                {"s": schema}
+            )
+            exists = result.first() is not None
+            if exists:
+                _VERIFIED_TENANTS_CACHE[tenant_id] = now + CACHE_TTL
+            return exists
+    except Exception as e:
+        print(f"Error verifying schema for tenant {tenant_id}: {e}")
+        return False
 
 class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -69,6 +99,17 @@ class TenantMiddleware(BaseHTTPMiddleware):
             return JSONResponse(
                 status_code=403,
                 content={"detail": "No tenant context. Provide a valid Bearer token or X-Tenant-ID header."}
+            )
+
+        # 4. Schema Verification (Graceful Error Handling)
+        if not await _verify_schema_exists(tenant_id):
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=403,
+                content={
+                    "detail": f"Tenant '{tenant_id}' is not properly initialized. "
+                              "If you just reset the database, please re-register your account."
+                }
             )
 
         request.state.tenant_id = tenant_id

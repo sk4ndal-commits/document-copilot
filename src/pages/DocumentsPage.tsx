@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Document, DocumentStatus, compareDocuments, deleteDocument, fetchDocuments, fetchIngestionStatus, summarizeDocument, uploadDocument } from '../services/api/index'
 
 const KNOWLEDGE_BASES = [
@@ -33,7 +34,9 @@ function StatusBadge({ status }: { status: DocumentStatus }) {
 
 export default function DocumentsPage() {
   const [docs, setDocs] = useState<Document[]>([])
+  const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState('')
+  const kbFilter = searchParams.get('kb')
   const [showUpload, setShowUpload] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [selectedKB, setSelectedKB] = useState(KNOWLEDGE_BASES[0])
@@ -127,15 +130,32 @@ export default function DocumentsPage() {
     )
   }
 
-  const filtered = docs.filter(d =>
-    d.name.toLowerCase().includes(search.toLowerCase()) ||
-    d.knowledgeBase.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = docs.filter(d => {
+    const matchesSearch = d.name.toLowerCase().includes(search.toLowerCase()) ||
+                         d.knowledgeBase.toLowerCase().includes(search.toLowerCase())
+    const matchesKB = !kbFilter || d.knowledgeBase === kbFilter
+    return matchesSearch && matchesKB
+  })
 
   return (
     <div className="max-w-[800px] mx-auto">
       <div className="flex justify-between items-center mb-5">
-        <h2 className="text-xl font-semibold text-gray-900">Document Center</h2>
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">Document Center</h2>
+          {kbFilter && (
+            <div className="flex items-center mt-1">
+              <span className="text-sm text-gray-500 mr-2 flex items-center">
+                <span className="mr-1">📁</span> Category: <strong>{kbFilter}</strong>
+              </span>
+              <button
+                onClick={() => setSearchParams({})}
+                className="text-xs text-brand hover:underline cursor-pointer flex items-center"
+              >
+                <span className="mr-1">✕</span> Clear filter
+              </button>
+            </div>
+          )}
+        </div>
         <div className="flex gap-3 items-center">
           {selectedForCompare.length === 2 && (
             <button
