@@ -20,7 +20,7 @@ async def generate_answer(query: str, context_chunks: list[str]) -> str:
         f"Question: {query}\n\n"
         "Answer:"
     )
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=45.0) as client:
         res = await client.post(
             KIMI_API_URL,
             headers=headers,
@@ -35,16 +35,19 @@ async def generate_answer(query: str, context_chunks: list[str]) -> str:
         return res.json()["choices"][0]["message"]["content"]
 
 
-async def generate_follow_up(query: str, answer: str) -> list[str]:
+async def generate_follow_up(query: str, answer: str | None = None, context: str | None = None) -> list[str]:
+    context_str = f"\nContext: {context}" if context else ""
+    answer_str = f"\nAnswer: {answer}" if answer else ""
     prompt = (
-        "Based on the original question and the answer provided, suggest exactly 3 short follow-up questions "
+        "Based on the original question and the information provided, suggest exactly 3 short follow-up questions "
         "that the user might want to ask next. Format as a simple list of questions, one per line.\n\n"
-        f"Original Question: {query}\n"
-        f"Answer: {answer}\n\n"
+        f"Original Question: {query}"
+        f"{context_str}"
+        f"{answer_str}\n\n"
         "Follow-up Questions:"
     )
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=25.0) as client:
             res = await client.post(
                 KIMI_API_URL,
                 headers=headers,
@@ -75,7 +78,7 @@ async def generate_summary(text: str) -> str:
         f"Content:\n{text}\n\n"
         "Summary:"
     )
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=45.0) as client:
         res = await client.post(
             KIMI_API_URL,
             headers=headers,
@@ -98,7 +101,7 @@ async def compare_docs(doc_a_text: str, doc_b_text: str) -> str:
         f"Document B:\n{doc_b_text}\n\n"
         "Comparison:"
     )
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=45.0) as client:
         res = await client.post(
             KIMI_API_URL,
             headers=headers,

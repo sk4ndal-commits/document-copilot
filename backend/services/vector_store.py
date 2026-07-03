@@ -81,9 +81,10 @@ def search(
         query_filter = Filter(
             must=[FieldCondition(key="knowledge_base", match=MatchValue(value=knowledge_base))]
         )
-    return client.search(
+    result = client.query_points(
         collection_name=COLLECTION,
-        query_vector=query_vector,
+        query=query_vector,
         limit=top_k,
         query_filter=query_filter,
     )
+    return result.points

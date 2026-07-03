@@ -84,12 +84,13 @@ def search_for_tenant(
         query_filter = Filter(
             must=[FieldCondition(key="knowledge_base", match=MatchValue(value=knowledge_base))]
         )
-    return client.search(
+    result = client.query_points(
         collection_name=collection,
-        query_vector=query_vector,
+        query=query_vector,
         limit=top_k,
         query_filter=query_filter,
     )
+    return result.points
 
 
 def get_document_full_text_for_tenant(tenant_id: str, doc_id: str) -> str:

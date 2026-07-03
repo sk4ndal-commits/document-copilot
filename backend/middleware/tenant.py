@@ -19,7 +19,7 @@ _PUBLIC_PATHS = {"/health", "/docs", "/openapi.json", "/redoc", "/api/auth/login
 
 # Simple cache for verified tenants: {tenant_id: expiry_timestamp}
 _VERIFIED_TENANTS_CACHE = {}
-CACHE_TTL = 300  # 5 minutes
+CACHE_TTL = 3600  # 1 hour
 
 def _decode_jwt_payload(token: str) -> dict | None:
     """

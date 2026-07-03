@@ -41,10 +41,14 @@ async def search(req: SearchRequest, request: Request, db: AsyncSession = Depend
         docs.setdefault(doc_id, []).append(hit)
 
     context_chunks = [hit.payload["text"] for hit in authorized_hits]
-    answer_text = await generate_answer(req.query, context_chunks)
+    full_context = "\n\n".join(context_chunks)
     
-    # Generate follow-up questions
-    follow_ups = await generate_follow_up(req.query, answer_text)
+    # Run LLM calls concurrently
+    import asyncio
+    answer_text, follow_ups = await asyncio.gather(
+        generate_answer(req.query, context_chunks),
+        generate_follow_up(req.query, context=full_context[:2000]) # Pass partial context to avoid token limits
+    )
 
     # Log search quality
     is_no_result = "I don't know" in answer_text or "I'm sorry" in answer_text
