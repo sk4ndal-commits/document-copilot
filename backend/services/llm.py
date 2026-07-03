@@ -1,7 +1,13 @@
 import os
 import httpx
 
-KIMI_API_URL = os.getenv("KIMI_API_URL", "http://localhost:8001/v1/chat/completions")
+KIMI_API_URL = os.getenv("KIMI_API_URL", "https://api.openai.com/v1/chat/completions")
+KIMI_API_KEY = os.getenv("KIMI_API_KEY")
+
+headers = {
+    "Authorization": f"Bearer {KIMI_API_KEY}",
+    "Content-Type": "application/json"
+}
 
 
 async def generate_answer(query: str, context_chunks: list[str]) -> str:
@@ -17,8 +23,9 @@ async def generate_answer(query: str, context_chunks: list[str]) -> str:
     async with httpx.AsyncClient(timeout=60.0) as client:
         res = await client.post(
             KIMI_API_URL,
+            headers=headers,
             json={
-                "model": "kimi",
+                "model": "gpt-4o",
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.1,
                 "max_tokens": 1024,
@@ -40,8 +47,9 @@ async def generate_follow_up(query: str, answer: str) -> list[str]:
         async with httpx.AsyncClient(timeout=30.0) as client:
             res = await client.post(
                 KIMI_API_URL,
+                headers=headers,
                 json={
-                    "model": "kimi",
+                    "model": "gpt-4o",
                     "messages": [{"role": "user", "content": prompt}],
                     "temperature": 0.5,
                     "max_tokens": 256,
@@ -70,8 +78,9 @@ async def generate_summary(text: str) -> str:
     async with httpx.AsyncClient(timeout=60.0) as client:
         res = await client.post(
             KIMI_API_URL,
+            headers=headers,
             json={
-                "model": "kimi",
+                "model": "gpt-4o",
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.3,
                 "max_tokens": 512,
@@ -92,8 +101,9 @@ async def compare_docs(doc_a_text: str, doc_b_text: str) -> str:
     async with httpx.AsyncClient(timeout=60.0) as client:
         res = await client.post(
             KIMI_API_URL,
+            headers=headers,
             json={
-                "model": "kimi",
+                "model": "gpt-4o",
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.3,
                 "max_tokens": 1024,
