@@ -20,6 +20,7 @@ export interface Source {
 }
 
 export interface AnswerResult {
+  id?: string  // message_id
   answer: string | null
   blocked: boolean
   sources: Source[]

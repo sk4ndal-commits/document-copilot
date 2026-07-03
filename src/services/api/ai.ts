@@ -33,3 +33,9 @@ export async function compareDocuments(docIdA: string, docIdB: string): Promise<
   const data: ComparisonResponse = await res.json()
   return data.comparison
 }
+
+export async function fetchSuggestedQuestions(): Promise<string[]> {
+  const res = await apiFetch('/api/ai/suggested-questions')
+  if (!res.ok) return []
+  return res.json()
+}

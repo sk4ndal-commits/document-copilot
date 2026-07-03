@@ -60,3 +60,20 @@ export async function fetchIngestionStatus(id: string): Promise<Document> {
     sizeBytes: doc.size_bytes,
   }
 }
+
+export async function bulkUpdateDocuments(docIds: string[], knowledgeBase: string): Promise<void> {
+  const res = await apiFetch('/api/documents/bulk', {
+    method: 'PATCH',
+    body: JSON.stringify({ doc_ids: docIds, knowledge_base: knowledgeBase }),
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!res.ok) {
+    throw new Error('Bulk update failed')
+  }
+}
+
+export async function fetchCategories(): Promise<any[]> {
+  const res = await apiFetch('/api/admin/categories')
+  if (!res.ok) return []
+  return res.json()
+}

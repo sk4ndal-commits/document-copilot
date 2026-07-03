@@ -43,6 +43,14 @@ CREATE TABLE IF NOT EXISTS {schema}.connector_configs (
     enabled         BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS {schema}.knowledge_bases (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    color TEXT,
+    icon TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
 """
 
 

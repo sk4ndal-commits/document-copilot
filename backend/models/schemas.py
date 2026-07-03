@@ -37,6 +37,7 @@ class Source(BaseModel):
 
 
 class AnswerResult(BaseModel):
+    id: Optional[str] = None
     answer: Optional[str] = None
     blocked: bool = False
     sources: list[Source]
@@ -72,6 +73,26 @@ class AdminMetrics(BaseModel):
     search_activity: int
     ai_usage_tokens: int
     storage_bytes: int
+    avg_satisfaction: Optional[float] = None
+    no_result_count: int = 0
+
+
+class KnowledgeBase(BaseModel):
+    id: Optional[str] = None
+    name: str
+    color: Optional[str] = None
+    icon: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+
+class BulkUpdateDocuments(BaseModel):
+    doc_ids: List[str]
+    knowledge_base: str
+
+
+class FeedbackRequest(BaseModel):
+    message_id: str
+    feedback: int  # 1 or -1
 
 
 class UserOut(BaseModel):

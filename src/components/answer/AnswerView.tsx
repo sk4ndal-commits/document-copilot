@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AnswerResult, Source } from '../../services/api'
+import { AnswerResult, Source, submitFeedback } from '../../services/api'
 import SourceList from './SourceList'
 import SourcePanel from './SourcePanel'
 
@@ -11,10 +11,21 @@ interface AnswerViewProps {
 export default function AnswerView({ result }: AnswerViewProps) {
   const [selectedSource, setSelectedSource] = useState<Source | null>(null)
   const [showSources, setShowSources] = useState(false)
+  const [feedbackStatus, setFeedbackStatus] = useState<'liked' | 'disliked' | null>(null)
   const navigate = useNavigate()
 
   const handleFollowUp = (q: string) => {
     navigate(`/answer?q=${encodeURIComponent(q)}`)
+  }
+
+  const handleFeedback = async (val: number) => {
+    if (!result.id) return
+    try {
+      await submitFeedback(result.id, val)
+      setFeedbackStatus(val === 1 ? 'liked' : 'disliked')
+    } catch (err) {
+      console.error('Feedback failed', err)
+    }
   }
 
   if (result.blocked) {
@@ -30,9 +41,30 @@ export default function AnswerView({ result }: AnswerViewProps) {
 
   return (
     <div>
-      <div className="bg-surface border border-border rounded-xl p-6 mb-4">
+      <div className="bg-surface border border-border rounded-xl p-6 mb-4 relative group">
         <p className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-4">Answer</p>
         <p className="whitespace-pre-line text-gray-900 leading-relaxed text-base">{result.answer}</p>
+        
+        <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button 
+            onClick={() => handleFeedback(1)}
+            className={`p-1.5 rounded-md border transition-all ${
+              feedbackStatus === 'liked' ? 'bg-green-100 border-green-300 text-green-700' : 'bg-white border-border text-gray-400 hover:text-green-600'
+            }`}
+            title="Helpful"
+          >
+            👍
+          </button>
+          <button 
+            onClick={() => handleFeedback(-1)}
+            className={`p-1.5 rounded-md border transition-all ${
+              feedbackStatus === 'disliked' ? 'bg-red-100 border-red-300 text-red-700' : 'bg-white border-border text-gray-400 hover:text-red-600'
+            }`}
+            title="Not helpful"
+          >
+            👎
+          </button>
+        </div>
       </div>
 
       {result.followUpQuestions && result.followUpQuestions.length > 0 && (

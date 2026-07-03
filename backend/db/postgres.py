@@ -1,7 +1,7 @@
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Enum as SAEnum
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Enum as SAEnum, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from models.schemas import DocumentStatus
@@ -45,6 +45,8 @@ class Message(Base):
     role = Column(String, nullable=False)  # 'user' or 'assistant'
     content = Column(String, nullable=False)
     timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    feedback = Column(Integer, nullable=True)  # 1 for up, -1 for down
+    is_no_result = Column(Boolean, default=False)
     conversation = relationship("Conversation", back_populates="messages")
 
 

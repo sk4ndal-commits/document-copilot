@@ -1,15 +1,19 @@
-const suggestions = [
-  'Warranty process France',
-  'Vacation policy',
-  'Machine X maintenance',
-  'ISO audit requirements',
-]
+import { useState, useEffect } from 'react'
+import { fetchSuggestedQuestions } from '../../services/api/ai'
 
 interface SuggestedQuestionsProps {
   onSelect: (query: string) => void
 }
 
 export default function SuggestedQuestions({ onSelect }: SuggestedQuestionsProps) {
+  const [suggestions, setSuggestions] = useState<string[]>([])
+
+  useEffect(() => {
+    fetchSuggestedQuestions().then(setSuggestions)
+  }, [])
+
+  if (suggestions.length === 0) return null
+
   return (
     <div className="mt-8 text-left">
       <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">

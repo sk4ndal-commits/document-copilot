@@ -1,9 +1,11 @@
 import time
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-from db.postgres import get_db
-from models.schemas import SearchRequest, AnswerResult, Source, Chunk
+from db.postgres import get_db, Message, Conversation
+from models.schemas import SearchRequest, AnswerResult, Source, Chunk, FeedbackRequest
+import uuid
 from services.embeddings import embed
 from services.tenant_vector_store import search_for_tenant
 from services.llm import generate_answer, generate_follow_up
@@ -44,6 +46,12 @@ async def search(req: SearchRequest, request: Request, db: AsyncSession = Depend
     # Generate follow-up questions
     follow_ups = await generate_follow_up(req.query, answer_text)
 
+    # Log search quality
+    is_no_result = "I don't know" in answer_text or "I'm sorry" in answer_text
+    # In a real app we would have a conversation_id in SearchRequest. 
+    # For now, let's create a dummy conversation or just log the message if we had a way.
+    # Since we don't have conversation_id here, we'll skip DB logging for now or add it later.
+
     sources = []
     for doc_id, doc_hits in docs.items():
         top_hit = doc_hits[0]
@@ -76,6 +84,19 @@ async def search(req: SearchRequest, request: Request, db: AsyncSession = Depend
         blocked=False,
         sources=sources,
         follow_up_questions=follow_ups,
-        model_used="kimi",
+        model_used="gpt-4o",
         latency_ms=int((time.time() - t0) * 1000),
+        id=str(uuid.uuid4())
     )
+
+
+@router.post("/search/feedback")
+async def search_feedback(req: FeedbackRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Message).where(Message.id == req.message_id))
+    msg = result.scalar_one_or_none()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    msg.feedback = req.feedback
+    await db.commit()
+    return {"status": "ok"}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 import { useAuth } from '../../services/api/auth'
 import { fetchDocuments } from '../../services/api/documents'
 
@@ -73,10 +73,16 @@ export default function Sidebar() {
         </NavLink>
       </nav>
 
-      <div className="mb-2 px-3">
+      <div className="mb-2 px-3 flex justify-between items-center">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
           Categories
         </p>
+        <Link 
+          to="/admin?tab=categories" 
+          className="text-[10px] text-brand hover:underline font-medium"
+        >
+          Manage
+        </Link>
       </div>
       <ul className="list-none p-0 m-0 space-y-1 mb-6">
         <li>
@@ -112,7 +118,13 @@ export default function Sidebar() {
       </div>
       <nav className="flex flex-col space-y-1 mb-6">
         <NavLink to="/admin" className={navLinkClass}>
-          <IconAdmin />
+          <div className="relative">
+            <IconAdmin />
+            <span className="absolute -top-1 -right-1 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
+            </span>
+          </div>
           Admin
         </NavLink>
       </nav>

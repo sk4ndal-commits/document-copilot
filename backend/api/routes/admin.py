@@ -43,11 +43,44 @@ async def get_metrics(request: Request, db: AsyncSession = Depends(get_db)):
     storage_res = await db.execute(text(f"SELECT SUM(size_bytes) FROM {schema}.documents"))
     storage_bytes = storage_res.scalar() or 0
     
+    # 4. Feedback metrics
+    feedback_res = await db.execute(
+        select(func.avg(Message.feedback))
+        .join(Conversation)
+        .where(Conversation.tenant_id == tenant_id, Message.role == "assistant", Message.feedback.is_not(None))
+    )
+    avg_feedback = feedback_res.scalar()
+    
+    # 5. No result queries
+    no_res_count = await db.execute(
+        select(func.count(Message.id))
+        .join(Conversation)
+        .where(Conversation.tenant_id == tenant_id, Message.is_no_result == True)
+    )
+    no_result_count = no_res_count.scalar() or 0
+    
     return AdminMetrics(
         search_activity=search_count,
         ai_usage_tokens=ai_usage,
-        storage_bytes=storage_bytes
+        storage_bytes=storage_bytes,
+        avg_satisfaction=round(avg_feedback, 2) if avg_feedback is not None else None,
+        no_result_count=no_result_count
     )
+
+
+@router.get("/admin/knowledge-gaps")
+async def get_knowledge_gaps(request: Request, db: AsyncSession = Depends(get_db)):
+    tenant_id = request.state.tenant_id
+    # Find user messages that led to a "no result" answer
+    # This requires looking at the next message in the conversation, or just logging it on the user message.
+    # For now, let's just return messages where is_no_result is True.
+    result = await db.execute(
+        select(Message.content)
+        .join(Conversation)
+        .where(Conversation.tenant_id == tenant_id, Message.is_no_result == True)
+        .limit(10)
+    )
+    return [row[0] for row in result.all()]
 
 
 @router.get("/admin/users", response_model=list[UserOut])

@@ -12,9 +12,11 @@ from db.tenants import (
     get_tenant_documents,
     get_tenant_document,
     upsert_tenant_document,
-    delete_tenant_document
+    delete_tenant_document,
+    schema_name
 )
-from models.schemas import DocumentOut, DocumentStatus, UploadResponse
+from sqlalchemy import select, text
+from models.schemas import DocumentOut, DocumentStatus, UploadResponse, KnowledgeBase, BulkUpdateDocuments
 from services.ingestion import ingest_document
 from services.vector_store import delete_by_doc_id
 
@@ -111,3 +113,46 @@ async def delete_document(doc_id: str, request: Request, db: AsyncSession = Depe
         os.remove(record["file_path"])
 
     await delete_tenant_document(db, tenant_id, doc_id)
+
+
+@router.patch("/documents/bulk", status_code=200)
+async def bulk_update_documents(data: BulkUpdateDocuments, request: Request, db: AsyncSession = Depends(get_db)):
+    tenant_id = request.state.tenant_id
+    schema = schema_name(tenant_id)
+    if not data.doc_ids:
+        return {"updated": 0}
+
+    # Since we don't have a helper for bulk update in tenants.py, we use text()
+    query = text(f"UPDATE {schema}.documents SET knowledge_base = :kb WHERE id = ANY(:ids)")
+    await db.execute(query, {"kb": data.knowledge_base, "ids": data.doc_ids})
+    await db.commit()
+    return {"updated": len(data.doc_ids)}
+
+
+@router.get("/admin/categories", response_model=list[KnowledgeBase])
+async def list_categories(request: Request, db: AsyncSession = Depends(get_db)):
+    tenant_id = request.state.tenant_id
+    schema = schema_name(tenant_id)
+    result = await db.execute(text(f"SELECT * FROM {schema}.knowledge_bases ORDER BY name ASC"))
+    rows = result.mappings().all()
+    return [KnowledgeBase(**dict(r)) for r in rows]
+
+
+@router.post("/admin/categories", response_model=KnowledgeBase)
+async def create_category(data: KnowledgeBase, request: Request, db: AsyncSession = Depends(get_db)):
+    tenant_id = request.state.tenant_id
+    schema = schema_name(tenant_id)
+    cat_id = data.id or str(uuid.uuid4())
+    query = text(f"""
+        INSERT INTO {schema}.knowledge_bases (id, name, color, icon)
+        VALUES (:id, :name, :color, :icon)
+        ON CONFLICT (id) DO UPDATE SET
+            name = EXCLUDED.name,
+            color = EXCLUDED.color,
+            icon = EXCLUDED.icon
+        RETURNING *
+    """)
+    result = await db.execute(query, {"id": cat_id, "name": data.name, "color": data.color, "icon": data.icon})
+    row = result.mappings().first()
+    await db.commit()
+    return KnowledgeBase(**dict(row))

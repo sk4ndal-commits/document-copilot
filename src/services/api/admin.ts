@@ -9,6 +9,8 @@ export interface AdminMetrics {
   search_activity: number
   ai_usage_tokens: number
   storage_bytes: number
+  avg_satisfaction?: number
+  no_result_count: number
 }
 
 export interface User {
@@ -32,5 +34,21 @@ export async function fetchAdminMetrics(): Promise<AdminMetrics> {
 export async function fetchAdminUsers(): Promise<User[]> {
   const res = await apiFetch('/api/admin/users')
   if (!res.ok) throw new Error('Failed to fetch admin users')
+  return res.json()
+}
+
+export async function fetchKnowledgeGaps(): Promise<string[]> {
+  const res = await apiFetch('/api/admin/knowledge-gaps')
+  if (!res.ok) return []
+  return res.json()
+}
+
+export async function createCategory(name: string, color?: string): Promise<any> {
+  const res = await apiFetch('/api/admin/categories', {
+    method: 'POST',
+    body: JSON.stringify({ name, color }),
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!res.ok) throw new Error('Failed to create category')
   return res.json()
 }

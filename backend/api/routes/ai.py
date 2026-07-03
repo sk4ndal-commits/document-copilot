@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.postgres import get_db
+from sqlalchemy import select, func
+from db.postgres import get_db, Message, Conversation
 from db.tenants import get_tenant_document
 from models.schemas import SummaryResponse, ComparisonRequest, ComparisonResponse
 from services.tenant_vector_store import get_document_full_text_for_tenant
@@ -43,3 +44,28 @@ async def compare_documents(req: ComparisonRequest, request: Request, db: AsyncS
     # 2. Generate comparison
     comparison = await compare_docs(text_a, text_b)
     return ComparisonResponse(comparison=comparison)
+
+
+@router.get("/ai/suggested-questions", response_model=list[str])
+async def get_suggested_questions(request: Request, db: AsyncSession = Depends(get_db)):
+    tenant_id = request.state.tenant_id
+    # Get the most common user questions for this tenant
+    result = await db.execute(
+        select(Message.content)
+        .join(Conversation)
+        .where(Conversation.tenant_id == tenant_id, Message.role == "user")
+        .group_by(Message.content)
+        .order_by(func.count(Message.id).desc())
+        .limit(4)
+    )
+    questions = [row[0] for row in result.all()]
+    
+    # Fallback to defaults if not enough history
+    if len(questions) < 2:
+        return [
+            "What are the main HR policies?",
+            "How do I set up my VPN?",
+            "What is the ISO 9001 certification process?",
+            "Where can I find the service manual for the X1 model?"
+        ]
+    return questions
