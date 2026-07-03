@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import { useAuth } from '../../services/api/auth'
-import { fetchDocuments } from '../../services/api/documents'
+import { fetchCategories } from '../../services/api/documents'
 
 export default function Sidebar() {
   const { logout, user } = useAuth()
   const [knowledgeBases, setKnowledgeBases] = useState<string[]>([])
 
   useEffect(() => {
-    fetchDocuments()
-      .then((docs) => {
-        const uniqueKBs = [...new Set(docs.map((d) => d.knowledgeBase))].filter(Boolean).sort()
-        setKnowledgeBases(uniqueKBs)
+    fetchCategories()
+      .then((cats) => {
+        setKnowledgeBases(cats.map(c => c.name))
       })
       .catch((err) => console.error('Failed to fetch knowledge bases:', err))
   }, [])
