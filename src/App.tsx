@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import PublicOnboardingPage from './pages/PublicOnboardingPage'
 import AppShell from './components/layout/AppShell'
 import OnboardingWizardPage from './pages/OnboardingWizardPage'
 import AnswerPage from './pages/AnswerPage'
@@ -40,7 +41,10 @@ function AuthenticatedApp() {
 export default function App() {
   return (
     <AuthProvider>
-      <AuthenticatedApp />
+      <Routes>
+        <Route path="/onboarding/submit/:token" element={<PublicOnboardingPage />} />
+        <Route path="*" element={<AuthenticatedApp />} />
+      </Routes>
     </AuthProvider>
   )
 }

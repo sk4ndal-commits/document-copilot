@@ -16,6 +16,7 @@ from db.postgres import engine
 
 # Routes that don't require a tenant context (health check, docs, auth)
 _PUBLIC_PATHS = {"/health", "/docs", "/openapi.json", "/redoc", "/api/auth/login", "/api/auth/register"}
+_PUBLIC_PREFIXES = ("/api/onboarding/public/",)
 
 # Simple cache for verified tenants: {tenant_id: expiry_timestamp}
 _VERIFIED_TENANTS_CACHE = {}
@@ -72,6 +73,8 @@ async def _verify_schema_exists(tenant_id: str) -> bool:
 class TenantMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         if request.url.path in _PUBLIC_PATHS:
+            return await call_next(request)
+        if any(request.url.path.startswith(p) for p in _PUBLIC_PREFIXES):
             return await call_next(request)
 
         tenant_id: str | None = None

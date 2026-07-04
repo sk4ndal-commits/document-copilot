@@ -65,6 +65,7 @@ class OnboardingSessionRecord(Base):
     id = Column(String, primary_key=True)
     tenant_id = Column(String, nullable=False, index=True)
     client_name = Column(String, nullable=True)
+    share_token = Column(String, unique=True, nullable=True, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     slots = relationship("OnboardingSlotRecord", back_populates="session", cascade="all, delete-orphan")

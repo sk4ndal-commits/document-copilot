@@ -11,6 +11,7 @@ export default function WizardShell() {
   const { slots, uploadAndValidate, resetSlot, overallStatus, loading } = useOnboardingSession(sessionId)
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [creating, setCreating] = useState(false)
+  const [shareUrl, setShareUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (!sessionId) {
@@ -23,7 +24,8 @@ export default function WizardShell() {
     if (clientName === null) return
     setCreating(true)
     try {
-      const { id } = await createSession(clientName)
+      const { id, share_token } = await createSession(clientName)
+      setShareUrl(`${window.location.origin}/onboarding/submit/${share_token}`)
       navigate(`/onboarding/${id}`)
     } finally {
       setCreating(false)
@@ -94,6 +96,23 @@ export default function WizardShell() {
           Upload the required legal documents below. Each document is automatically validated by AI.
           Correct any issues and re-upload until all required documents are accepted.
         </p>
+        {shareUrl && (
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+            <span className="text-xs text-blue-700 font-medium shrink-0">Client link:</span>
+            <input
+              readOnly
+              value={shareUrl}
+              onClick={e => (e.target as HTMLInputElement).select()}
+              className="flex-1 text-xs bg-transparent border-none outline-none text-blue-800 truncate"
+            />
+            <button
+              onClick={() => navigator.clipboard.writeText(shareUrl)}
+              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 shrink-0"
+            >
+              Copy
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

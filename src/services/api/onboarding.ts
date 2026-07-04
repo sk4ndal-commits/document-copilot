@@ -24,11 +24,12 @@ export interface SessionSummary {
 export interface SessionDetail {
   id: string
   client_name: string
+  share_token?: string
   created_at: string
   slots: SlotState[]
 }
 
-export async function createSession(clientName: string): Promise<{ id: string }> {
+export async function createSession(clientName: string): Promise<{ id: string; share_token: string }> {
   const res = await apiFetch('/api/onboarding/sessions', {
     method: 'POST',
     body: JSON.stringify({ client_name: clientName }),
@@ -59,4 +60,30 @@ export async function updateSlot(
     body: JSON.stringify(patch),
     headers: { 'Content-Type': 'application/json' },
   })
+}
+
+// ─── Public (unauthenticated) helpers ────────────────────────────────────────
+
+const BASE = (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL ?? ''
+
+export async function fetchPublicSession(token: string): Promise<SessionDetail> {
+  const res = await fetch(`${BASE}/api/onboarding/public/${token}`)
+  if (!res.ok) throw new Error('Session not found')
+  return res.json()
+}
+
+export async function publicUploadSlot(
+  token: string,
+  slotId: string,
+  file: File,
+): Promise<SlotState> {
+  const form = new FormData()
+  form.append('slot_id', slotId)
+  form.append('file', file)
+  const res = await fetch(`${BASE}/api/onboarding/public/${token}/upload`, {
+    method: 'POST',
+    body: form,
+  })
+  if (!res.ok) throw new Error('Upload failed')
+  return res.json()
 }
