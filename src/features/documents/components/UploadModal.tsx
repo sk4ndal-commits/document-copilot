@@ -55,12 +55,13 @@ export function UploadModal({
                 </label>
 
                 <div className="flex items-center gap-3 mb-5">
-                    <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Knowledge Base</label>
+                    <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Legal Document Type</label>
                     <select
                         className="flex-1 p-2 border-[1.5px] border-border rounded-md text-sm bg-bg text-gray-900 focus:outline-none focus:border-brand"
                         value={selectedKB}
                         onChange={e => setSelectedKB(e.target.value)}
                     >
+                        <option value="">All Legal Documents</option>
                         {categories.map(cat => (
                             <option key={cat.id} value={cat.name}>{cat.name}</option>
                         ))}

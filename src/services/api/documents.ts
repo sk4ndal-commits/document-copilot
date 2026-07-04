@@ -14,7 +14,7 @@ export async function fetchDocuments(): Promise<Document[]> {
     version: doc.version,
     updatedAt: doc.updated_at,
     status: doc.status,
-    knowledgeBase: doc.knowledge_base,
+    knowledgeBase: doc.legal_doc_type,
     pageCount: doc.page_count,
     sizeBytes: doc.size_bytes,
   }))
@@ -55,7 +55,7 @@ export async function fetchIngestionStatus(id: string): Promise<Document> {
     version: doc.version,
     updatedAt: doc.updated_at,
     status: doc.status,
-    knowledgeBase: doc.knowledge_base,
+    knowledgeBase: doc.legal_doc_type,
     pageCount: doc.page_count,
     sizeBytes: doc.size_bytes,
   }

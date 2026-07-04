@@ -35,9 +35,6 @@ export function useDocuments() {
         fetchDocuments().then(setDocs)
         fetchCategories().then(cats => {
             setCategories(cats)
-            if (cats.length > 0) {
-                setSelectedKB(cats[0].name)
-            }
         })
     }, [])
 
@@ -62,6 +59,8 @@ export function useDocuments() {
     const handleUpload = async () => {
         if (!selectedFile) return
         setUploading(true)
+        setShowUpload(false)
+        setSelectedFile(null)
         try {
             const { id } = await uploadDocument(selectedFile, selectedKB)
             const newDoc: Document = {
@@ -74,8 +73,6 @@ export function useDocuments() {
                 sizeBytes: selectedFile.size,
             }
             setDocs(prev => [newDoc, ...prev])
-            setShowUpload(false)
-            setSelectedFile(null)
         } finally {
             setUploading(false)
         }

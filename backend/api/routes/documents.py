@@ -67,7 +67,7 @@ async def upload_document(
     request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    legal_doc_type: str = Form(...),
+    legal_doc_type: str = Form(default=""),
     db: AsyncSession = Depends(get_db),
 ):
     tenant_id = request.state.tenant_id
