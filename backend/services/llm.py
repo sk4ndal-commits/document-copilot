@@ -12,14 +12,17 @@ headers = {
 
 
 async def generate_answer(query: str, context_chunks: list[str]) -> str:
+    """Search for specific legal clauses or obligations across compliance documents."""
     context = "\n\n---\n\n".join(context_chunks)
     prompt = (
-        "You are a company knowledge assistant. "
-        "Answer the question based only on the provided context. "
-        "If the context does not contain enough information, say so clearly.\n\n"
-        f"Context:\n{context}\n\n"
-        f"Question: {query}\n\n"
-        "Answer:"
+        "You are a German Legal Compliance Assistant. "
+        "The user is searching for specific legal clauses, obligations, or provisions within compliance documents. "
+        "Answer the question based only on the provided document excerpts. "
+        "Highlight relevant clauses, identify the document they originate from, and flag any inconsistencies or missing obligations. "
+        "If the context does not contain the requested clause or information, state this clearly.\n\n"
+        f"Compliance Document Excerpts:\n{context}\n\n"
+        f"Legal Query: {query}\n\n"
+        "Answer (cite document sources where possible):"
     )
     async with httpx.AsyncClient(timeout=45.0) as client:
         res = await client.post(
@@ -37,15 +40,19 @@ async def generate_answer(query: str, context_chunks: list[str]) -> str:
 
 
 async def generate_follow_up(query: str, answer: str | None = None, context: str | None = None) -> list[str]:
-    context_str = f"\nContext: {context}" if context else ""
-    answer_str = f"\nAnswer: {answer}" if answer else ""
+    """Suggest legal-context-aware follow-up queries for compliance clause searches."""
+    context_str = f"\nDocument Context: {context}" if context else ""
+    answer_str = f"\nFound Clauses: {answer}" if answer else ""
     prompt = (
-        "Based on the original question and the information provided, suggest exactly 3 short follow-up questions "
-        "that the user might want to ask next. Format as a simple list of questions, one per line.\n\n"
-        f"Original Question: {query}"
+        "You are a German Legal Compliance Assistant. "
+        "Based on the original legal query and the compliance information found, suggest exactly 3 short follow-up questions "
+        "that a compliance officer might want to investigate next. "
+        "Focus on legal consistency, missing obligations, signature requirements, and regulatory compliance. "
+        "Format as a simple list of questions, one per line.\n\n"
+        f"Original Legal Query: {query}"
         f"{context_str}"
         f"{answer_str}\n\n"
-        "Follow-up Questions:"
+        "Follow-up Compliance Questions:"
     )
     try:
         async with httpx.AsyncClient(timeout=25.0) as client:
@@ -64,20 +71,25 @@ async def generate_follow_up(query: str, answer: str | None = None, context: str
             questions = [q.strip(" 123.-") for q in text.strip().split("\n") if q.strip()]
             return questions[:3]
     except Exception:
-        # Fallback to defaults if LLM fails or is slow
+        # Fallback to legal-specific defaults if LLM fails or is slow
         return [
-            "Can you explain that in more detail?",
-            "What are the next steps?",
-            "Where can I find more information?"
+            "Are the VAT IDs consistent across all submitted documents?",
+            "Which contracts are missing a valid signature?",
+            "Are there any documents referencing an outdated HRB number?"
         ]
 
 
 async def generate_summary(text: str) -> str:
+    """Extract legal metadata and key compliance information from a document."""
     prompt = (
-        "Summarize the following document content in 5 key bullet points. "
-        "Be concise and capture the most important information.\n\n"
-        f"Content:\n{text}\n\n"
-        "Summary:"
+        "You are a German Legal Compliance Auditor. "
+        "Extract and summarize the key legal metadata from the following document. "
+        "Focus on: involved parties and their roles (Geschäftsführer, Prokurist, etc.), "
+        "document date, signatures present, VAT ID (USt-IdNr), HRB number, "
+        "contractual obligations, and any compliance risks or missing required elements. "
+        "Present findings as concise bullet points.\n\n"
+        f"Document Content:\n{text}\n\n"
+        "Legal Metadata Summary:"
     )
     async with httpx.AsyncClient(timeout=45.0) as client:
         res = await client.post(
@@ -86,7 +98,7 @@ async def generate_summary(text: str) -> str:
             json={
                 "model": "gpt-4o",
                 "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.3,
+                "temperature": 0.1,
                 "max_tokens": 512,
             },
         )
@@ -132,12 +144,17 @@ async def validate_legal_document(text: str, doc_type: str) -> dict:
 
 
 async def compare_docs(doc_a_text: str, doc_b_text: str) -> str:
+    """Compare an uploaded document against an approved company template (Golden Standard)."""
     prompt = (
-        "Compare the following two documents. Highlight key similarities and differences "
-        "in terms of content, dates, and obligations. Use bullet points.\n\n"
-        f"Document A:\n{doc_a_text}\n\n"
-        f"Document B:\n{doc_b_text}\n\n"
-        "Comparison:"
+        "You are a German Legal Compliance Auditor performing a Golden Standard comparison. "
+        "Document A is the approved company template. Document B is the uploaded document to be reviewed. "
+        "Identify all legal discrepancies, missing clauses, deviating obligations, and inconsistent party details "
+        "(e.g., different VAT IDs, HRB numbers, signatory names, or representation types such as Prokura vs. Geschäftsführer). "
+        "Flag any compliance risks introduced by the deviations. Use bullet points grouped by: "
+        "Missing Clauses, Deviating Obligations, Inconsistent Party Details, Compliance Risks.\n\n"
+        f"Document A (Golden Standard / Approved Template):\n{doc_a_text}\n\n"
+        f"Document B (Uploaded Document for Review):\n{doc_b_text}\n\n"
+        "Golden Standard Comparison:"
     )
     async with httpx.AsyncClient(timeout=45.0) as client:
         res = await client.post(
@@ -146,7 +163,7 @@ async def compare_docs(doc_a_text: str, doc_b_text: str) -> str:
             json={
                 "model": "gpt-4o",
                 "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.3,
+                "temperature": 0.1,
                 "max_tokens": 1024,
             },
         )

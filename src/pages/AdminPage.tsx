@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { fetchAdminStatus, fetchAdminMetrics, fetchAdminUsers, fetchKnowledgeGaps, createCategory, AdminStatus, AdminMetrics, User } from '../services/api'
+import { fetchAdminStatus, fetchAdminMetrics, fetchAdminUsers, fetchComplianceIssues, createCategory, AdminStatus, AdminMetrics, User } from '../services/api'
 import { fetchCategories } from '../services/api/documents'
 
 export default function AdminPage() {
@@ -19,7 +19,7 @@ export default function AdminPage() {
       fetchAdminStatus(), 
       fetchAdminMetrics(), 
       fetchAdminUsers(), 
-      fetchKnowledgeGaps(),
+      fetchComplianceIssues(),
       fetchCategories()
     ])
       .then(([s, m, u, g, c]) => {
@@ -79,8 +79,8 @@ export default function AdminPage() {
             <h3 className="text-sm font-semibold mb-4 text-gray-500 uppercase tracking-wider">Dashboard Metrics</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="bg-white border border-border rounded-xl p-5 shadow-sm">
-                <p className="text-[10px] font-bold text-gray-400 mb-1 uppercase">Search Activity</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics?.search_activity}</p>
+                <p className="text-[10px] font-bold text-gray-400 mb-1 uppercase">Validation Activity</p>
+                <p className="text-2xl font-bold text-gray-900">{metrics?.validation_activity}</p>
               </div>
               <div className="bg-white border border-border rounded-xl p-5 shadow-sm">
                 <p className="text-[10px] font-bold text-gray-400 mb-1 uppercase">Avg Satisfaction</p>
@@ -91,7 +91,7 @@ export default function AdminPage() {
               <div className="bg-white border border-border rounded-xl p-5 shadow-sm">
                 <p className="text-[10px] font-bold text-gray-400 mb-1 uppercase">No Result Rate</p>
                 <p className="text-2xl font-bold text-red-500">
-                  {metrics?.search_activity ? ((metrics.no_result_count / metrics.search_activity) * 100).toFixed(0) : 0}%
+                  {metrics?.validation_activity ? ((metrics.no_result_count / metrics.validation_activity) * 100).toFixed(0) : 0}%
                 </p>
               </div>
               <div className="bg-white border border-border rounded-xl p-5 shadow-sm">
@@ -103,7 +103,7 @@ export default function AdminPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <section>
-              <h3 className="text-sm font-semibold mb-4 text-gray-500 uppercase tracking-wider">Knowledge Gaps</h3>
+              <h3 className="text-sm font-semibold mb-4 text-gray-500 uppercase tracking-wider">Compliance Issues</h3>
               <div className="bg-white border border-border rounded-xl p-5 shadow-sm min-h-[200px]">
                 {gaps.length > 0 ? (
                   <ul className="space-y-3">
@@ -123,7 +123,7 @@ export default function AdminPage() {
             </section>
 
             <section>
-              <h3 className="text-sm font-semibold mb-4 text-gray-500 uppercase tracking-wider">Data Sources</h3>
+              <h3 className="text-sm font-semibold mb-4 text-gray-500 uppercase tracking-wider">Document Registry</h3>
               <div className="bg-white border border-border rounded-xl p-5 shadow-sm">
                 {status?.data_sources.map(ds => (
                   <div key={ds.name} className="flex justify-between items-center py-3 border-b last:border-0 border-gray-50">

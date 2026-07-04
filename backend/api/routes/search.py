@@ -13,7 +13,7 @@ from services.llm import generate_answer, generate_follow_up
 router = APIRouter()
 
 
-@router.post("/search", response_model=AnswerResult)
+@router.post("/legal-clause-search", response_model=AnswerResult)
 async def search(req: SearchRequest, request: Request, db: AsyncSession = Depends(get_db)):
     t0 = time.time()
     tenant_id = request.state.tenant_id
@@ -32,7 +32,7 @@ async def search(req: SearchRequest, request: Request, db: AsyncSession = Depend
     ]
 
     if not authorized_hits:
-        return AnswerResult(answer="I found some results but you don't have permission to see them.", blocked=True, sources=[], latency_ms=int((time.time() - t0) * 1000))
+        return AnswerResult(answer="Relevant compliance documents were found but you don't have permission to access them.", blocked=True, sources=[], latency_ms=int((time.time() - t0) * 1000))
 
     # Group chunks by document
     docs: dict[str, list] = {}
@@ -94,7 +94,7 @@ async def search(req: SearchRequest, request: Request, db: AsyncSession = Depend
     )
 
 
-@router.post("/search/feedback")
+@router.post("/legal-clause-search/feedback")
 async def search_feedback(req: FeedbackRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Message).where(Message.id == req.message_id))
     msg = result.scalar_one_or_none()

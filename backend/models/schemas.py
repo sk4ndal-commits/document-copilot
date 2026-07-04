@@ -12,7 +12,7 @@ class DocumentStatus(str, Enum):
 
 class SearchRequest(BaseModel):
     query: str
-    knowledge_base: Optional[str] = None
+    legal_doc_type: Optional[str] = None
 
 
 class Chunk(BaseModel):
@@ -52,7 +52,7 @@ class DocumentOut(BaseModel):
     version: str
     updated_at: str
     status: DocumentStatus
-    knowledge_base: str
+    legal_doc_type: str
     page_count: Optional[int] = None
     size_bytes: Optional[int] = None
 
@@ -70,7 +70,7 @@ class AdminStatus(BaseModel):
 
 
 class AdminMetrics(BaseModel):
-    search_activity: int
+    validation_activity: int
     ai_usage_tokens: int
     storage_bytes: int
     avg_satisfaction: Optional[float] = None
@@ -87,7 +87,7 @@ class KnowledgeBase(BaseModel):
 
 class BulkUpdateDocuments(BaseModel):
     doc_ids: List[str]
-    knowledge_base: str
+    legal_doc_type: str
 
 
 class FeedbackRequest(BaseModel):

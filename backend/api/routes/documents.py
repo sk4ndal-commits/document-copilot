@@ -36,7 +36,7 @@ async def list_documents(request: Request, db: AsyncSession = Depends(get_db)):
             version=r["version"],
             updated_at=r["updated_at"],
             status=r["status"],
-            knowledge_base=r["knowledge_base"],
+            legal_doc_type=r["knowledge_base"],
             page_count=r["page_count"],
             size_bytes=r["size_bytes"],
         )
@@ -56,7 +56,7 @@ async def get_document_status(doc_id: str, request: Request, db: AsyncSession = 
         version=record["version"],
         updated_at=record["updated_at"],
         status=record["status"],
-        knowledge_base=record["knowledge_base"],
+        legal_doc_type=record["knowledge_base"],
         page_count=record["page_count"],
         size_bytes=record["size_bytes"],
     )
@@ -67,7 +67,7 @@ async def upload_document(
     request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    knowledge_base: str = Form(...),
+    legal_doc_type: str = Form(...),
     db: AsyncSession = Depends(get_db),
 ):
     tenant_id = request.state.tenant_id
@@ -89,14 +89,14 @@ async def upload_document(
         "version": "v1",
         "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "status": DocumentStatus.processing,
-        "knowledge_base": knowledge_base,
+        "knowledge_base": legal_doc_type,
         "size_bytes": len(contents),
         "file_path": file_path,
         "page_count": None,
     }
     await upsert_tenant_document(db, tenant_id, doc_data)
 
-    background_tasks.add_task(ingest_document, doc_id, file.filename, knowledge_base, file_path, mime_type, db, tenant_id)
+    background_tasks.add_task(ingest_document, doc_id, file.filename, legal_doc_type, file_path, mime_type, db, tenant_id)
 
     return UploadResponse(id=doc_id)
 
@@ -125,7 +125,7 @@ async def bulk_update_documents(data: BulkUpdateDocuments, request: Request, db:
 
     # Since we don't have a helper for bulk update in tenants.py, we use text()
     query = text(f"UPDATE {schema}.documents SET knowledge_base = :kb WHERE id = ANY(:ids)")
-    await db.execute(query, {"kb": data.knowledge_base, "ids": data.doc_ids})
+    await db.execute(query, {"kb": data.legal_doc_type, "ids": data.doc_ids})
     await db.commit()
     return {"updated": len(data.doc_ids)}
 

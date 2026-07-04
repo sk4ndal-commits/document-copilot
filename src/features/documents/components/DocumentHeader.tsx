@@ -18,7 +18,7 @@ export function DocumentHeader({
     return (
         <div className="flex justify-between items-center mb-5">
             <div>
-                <h2 className="text-xl font-semibold text-gray-900">Document Center</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Compliance Dashboard</h2>
                 {kbFilter && (
                     <div className="flex items-center mt-1">
                         <span className="text-sm text-gray-500 mr-2 flex items-center">

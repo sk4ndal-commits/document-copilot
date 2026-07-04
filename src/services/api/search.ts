@@ -1,12 +1,12 @@
 import { apiFetch } from './client'
 import { AnswerResult } from './types'
 
-export async function fetchAnswer(query: string, knowledgeBase: string | null = null): Promise<AnswerResult> {
-  const res = await apiFetch('/api/search', {
+export async function fetchAnswer(query: string, legalDocType: string | null = null): Promise<AnswerResult> {
+  const res = await apiFetch('/api/legal-clause-search', {
     method: 'POST',
     body: JSON.stringify({
       query,
-      knowledge_base: knowledgeBase,
+      legal_doc_type: legalDocType,
     }),
   })
 
@@ -28,7 +28,7 @@ export async function fetchAnswer(query: string, knowledgeBase: string | null = 
 }
 
 export async function submitFeedback(messageId: string, feedback: number): Promise<void> {
-  const res = await apiFetch('/api/search/feedback', {
+  const res = await apiFetch('/api/legal-clause-search/feedback', {
     method: 'POST',
     body: JSON.stringify({ message_id: messageId, feedback }),
     headers: { 'Content-Type': 'application/json' },

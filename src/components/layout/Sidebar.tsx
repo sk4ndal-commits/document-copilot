@@ -5,14 +5,14 @@ import { fetchCategories } from '../../services/api/documents'
 
 export default function Sidebar() {
   const { logout, user } = useAuth()
-  const [knowledgeBases, setKnowledgeBases] = useState<string[]>([])
+  const [legalDocTypes, setLegalDocTypes] = useState<string[]>([])
 
   useEffect(() => {
     fetchCategories()
       .then((cats) => {
-        setKnowledgeBases(cats.map(c => c.name))
+        setLegalDocTypes(cats.map(c => c.name))
       })
-      .catch((err) => console.error('Failed to fetch knowledge bases:', err))
+      .catch((err) => console.error('Failed to fetch legal document types:', err))
   }, [])
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -37,13 +37,13 @@ export default function Sidebar() {
 
   const IconDocuments = () => (
     <svg className="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
   )
 
-  const IconSearch = () => (
+  const IconScale = () => (
     <svg className="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l9-4 9 4M3 6v12l9 4 9-4V6M3 6l9 4 9-4" />
     </svg>
   )
 
@@ -82,17 +82,17 @@ export default function Sidebar() {
       <nav className="flex flex-col space-y-1 mb-6">
         <NavLink to="/documents" end className={navLinkClass}>
           <IconDocuments />
-          Document Center
+          Compliance Dashboard
         </NavLink>
         <NavLink to="/answer" end className={navLinkClass}>
-          <IconSearch />
-          AI Search
+          <IconScale />
+          Legal Clause Search
         </NavLink>
       </nav>
 
       <div className="mb-2 px-3 flex justify-between items-center">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-          Categories
+          Legal Document Types
         </p>
         <Link 
           to="/admin?tab=categories" 
@@ -107,11 +107,11 @@ export default function Sidebar() {
             to="/documents"
             className={categoryLinkClass}
           >
-            <span className="mr-2 opacity-50">•</span> All Documents
+            <span className="mr-2 opacity-50">•</span> All Legal Documents
           </NavLink>
         </li>
-        {knowledgeBases.length > 0 ? (
-          knowledgeBases.map((kb) => (
+        {legalDocTypes.length > 0 ? (
+          legalDocTypes.map((kb) => (
             <li key={kb}>
               <NavLink
                 to={`/documents?kb=${encodeURIComponent(kb)}`}
@@ -123,7 +123,7 @@ export default function Sidebar() {
           ))
         ) : (
           <li className="px-3 py-1.5 text-xs text-gray-400 italic">
-            No categories found
+            No legal document types found
           </li>
         )}
       </ul>

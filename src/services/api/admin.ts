@@ -6,7 +6,7 @@ export interface AdminStatus {
 }
 
 export interface AdminMetrics {
-  search_activity: number
+  validation_activity: number
   ai_usage_tokens: number
   storage_bytes: number
   avg_satisfaction?: number
@@ -37,8 +37,8 @@ export async function fetchAdminUsers(): Promise<User[]> {
   return res.json()
 }
 
-export async function fetchKnowledgeGaps(): Promise<string[]> {
-  const res = await apiFetch('/api/admin/knowledge-gaps')
+export async function fetchComplianceIssues(): Promise<string[]> {
+  const res = await apiFetch('/api/admin/compliance-issues')
   if (!res.ok) return []
   return res.json()
 }

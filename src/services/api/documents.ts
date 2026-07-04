@@ -20,10 +20,10 @@ export async function fetchDocuments(): Promise<Document[]> {
   }))
 }
 
-export async function uploadDocument(file: File, knowledgeBase: string): Promise<{ id: string }> {
+export async function uploadDocument(file: File, legalDocType: string): Promise<{ id: string }> {
   const form = new FormData()
   form.append('file', file)
-  form.append('knowledge_base', knowledgeBase)
+  form.append('legal_doc_type', legalDocType)
 
   const res = await apiFetch('/api/documents/upload', {
     method: 'POST',
@@ -61,10 +61,10 @@ export async function fetchIngestionStatus(id: string): Promise<Document> {
   }
 }
 
-export async function bulkUpdateDocuments(docIds: string[], knowledgeBase: string): Promise<void> {
+export async function bulkUpdateDocuments(docIds: string[], legalDocType: string): Promise<void> {
   const res = await apiFetch('/api/documents/bulk', {
     method: 'PATCH',
-    body: JSON.stringify({ doc_ids: docIds, knowledge_base: knowledgeBase }),
+    body: JSON.stringify({ doc_ids: docIds, legal_doc_type: legalDocType }),
     headers: { 'Content-Type': 'application/json' },
   })
   if (!res.ok) {

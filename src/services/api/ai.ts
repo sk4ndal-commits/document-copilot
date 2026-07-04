@@ -9,7 +9,7 @@ export interface ComparisonResponse {
 }
 
 export async function summarizeDocument(docId: string): Promise<string> {
-  const res = await apiFetch(`/api/ai/summarize/${docId}`, {
+  const res = await apiFetch(`/api/ai/legal-summary/${docId}`, {
     method: 'POST',
   })
   if (!res.ok) {
@@ -20,7 +20,7 @@ export async function summarizeDocument(docId: string): Promise<string> {
 }
 
 export async function compareDocuments(docIdA: string, docIdB: string): Promise<string> {
-  const res = await apiFetch('/api/ai/compare', {
+  const res = await apiFetch('/api/ai/golden-standard-check', {
     method: 'POST',
     body: JSON.stringify({
       doc_id_a: docIdA,
@@ -35,7 +35,7 @@ export async function compareDocuments(docIdA: string, docIdB: string): Promise<
 }
 
 export async function fetchSuggestedQuestions(): Promise<string[]> {
-  const res = await apiFetch('/api/ai/suggested-questions')
+  const res = await apiFetch('/api/ai/suggested-legal-queries')
   if (!res.ok) return []
   return res.json()
 }
