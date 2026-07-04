@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import AppShell from './components/layout/AppShell'
-import HomePage from './pages/HomePage'
+import OnboardingWizardPage from './pages/OnboardingWizardPage'
 import AnswerPage from './pages/AnswerPage'
 import DocumentsPage from './pages/DocumentsPage'
 import AdminPage from './pages/AdminPage'
@@ -24,7 +24,8 @@ function AuthenticatedApp() {
   return (
     <AppShell>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<OnboardingWizardPage />} />
+        <Route path="/onboarding/wizard" element={<OnboardingWizardPage />} />
         <Route path="/answer" element={<AnswerPage />} />
         <Route path="/documents" element={<DocumentsPage />} />
         <Route path="/admin" element={<AdminPage />} />

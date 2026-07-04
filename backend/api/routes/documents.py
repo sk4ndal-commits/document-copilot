@@ -16,9 +16,10 @@ from db.tenants import (
     schema_name
 )
 from sqlalchemy import select, text
-from models.schemas import DocumentOut, DocumentStatus, UploadResponse, KnowledgeBase, BulkUpdateDocuments
+from models.schemas import DocumentOut, DocumentStatus, UploadResponse, KnowledgeBase, BulkUpdateDocuments, ValidateOnboardingResponse, ValidationResult, ExtractedInfo
 from services.ingestion import ingest_document
 from services.vector_store import delete_by_doc_id
+from services import validation as validation_service
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
 router = APIRouter()
@@ -156,3 +157,51 @@ async def create_category(data: KnowledgeBase, request: Request, db: AsyncSessio
     row = result.mappings().first()
     await db.commit()
     return KnowledgeBase(**dict(row))
+
+
+@router.post("/documents/validate-onboarding", response_model=ValidateOnboardingResponse)
+async def validate_onboarding_document(
+    file: UploadFile = File(...),
+    doc_type: str = Form(...),
+):
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+    tmp_id = str(uuid.uuid4())
+    ext = os.path.splitext(file.filename or "")[1]
+    file_path = os.path.join(UPLOAD_DIR, f"tmp_{tmp_id}{ext}")
+
+    contents = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(contents)
+
+    mime_type = file.content_type or mimetypes.guess_type(file.filename or "")[0] or "application/octet-stream"
+
+    try:
+        raw = await validation_service.validate_document(file_path, mime_type, doc_type)
+        extracted = ExtractedInfo(
+            vat_id=raw.get("extracted_info", {}).get("vat_id"),
+            hrb_number=raw.get("extracted_info", {}).get("hrb_number"),
+            signatories=raw.get("extracted_info", {}).get("signatories"),
+            document_date=raw.get("extracted_info", {}).get("document_date"),
+            company_name=raw.get("extracted_info", {}).get("company_name"),
+        )
+        result = ValidationResult(
+            is_valid=raw.get("is_valid", False),
+            errors=raw.get("errors", []),
+            extracted_info=extracted,
+        )
+    except Exception as e:
+        result = ValidationResult(
+            is_valid=False,
+            errors=[f"Validation failed: {str(e)}"],
+            extracted_info=ExtractedInfo(),
+        )
+    finally:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+    return ValidateOnboardingResponse(
+        doc_type=doc_type,
+        filename=file.filename or "",
+        result=result,
+    )

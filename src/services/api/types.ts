@@ -55,3 +55,36 @@ export interface Conversation {
   createdAt: string
   lastMessage?: string
 }
+
+export type SlotStatus = 'pending' | 'uploading' | 'validating' | 'ready' | 'error'
+
+export interface ExtractedInfo {
+  vat_id?: string | null
+  hrb_number?: string | null
+  signatories?: string[] | null
+  document_date?: string | null
+  company_name?: string | null
+}
+
+export interface ValidationResult {
+  is_valid: boolean
+  errors: string[]
+  extracted_info: ExtractedInfo
+}
+
+export interface ValidateOnboardingResponse {
+  doc_type: string
+  filename: string
+  result: ValidationResult
+}
+
+export interface OnboardingSlot {
+  slot_id: string
+  doc_type: string
+  label: string
+  description: string
+  required: boolean
+  status: SlotStatus
+  result?: ValidationResult
+  filename?: string
+}

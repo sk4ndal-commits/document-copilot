@@ -29,15 +29,21 @@ export default function Sidebar() {
         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
     }`
 
-  const IconSearch = () => (
+  const IconWizard = () => (
     <svg className="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   )
 
   const IconDocuments = () => (
     <svg className="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+    </svg>
+  )
+
+  const IconSearch = () => (
+    <svg className="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
   )
 
@@ -58,17 +64,29 @@ export default function Sidebar() {
     <aside className="w-[var(--sidebar-width)] border-r border-border px-4 py-6 flex flex-col overflow-y-auto flex-shrink-0">
       <div className="mb-2 px-3">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-          Core
+          Onboarding
         </p>
       </div>
       <nav className="flex flex-col space-y-1 mb-6">
         <NavLink to="/" end className={navLinkClass}>
-          <IconSearch />
-          Search
+          <IconWizard />
+          Onboarding Wizard
         </NavLink>
+      </nav>
+
+      <div className="mb-2 px-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+          Documents
+        </p>
+      </div>
+      <nav className="flex flex-col space-y-1 mb-6">
         <NavLink to="/documents" end className={navLinkClass}>
           <IconDocuments />
           Document Center
+        </NavLink>
+        <NavLink to="/answer" end className={navLinkClass}>
+          <IconSearch />
+          AI Search
         </NavLink>
       </nav>
 

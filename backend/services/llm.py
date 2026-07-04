@@ -1,4 +1,5 @@
 import os
+import json
 import httpx
 
 KIMI_API_URL = os.getenv("KIMI_API_URL", "https://api.openai.com/v1/chat/completions")
@@ -91,6 +92,43 @@ async def generate_summary(text: str) -> str:
         )
         res.raise_for_status()
         return res.json()["choices"][0]["message"]["content"]
+
+
+async def validate_legal_document(text: str, doc_type: str) -> dict:
+    prompt = (
+        "You are a German Legal Compliance Auditor.\n"
+        f"Task: Validate the provided [{doc_type}] against the following criteria:\n"
+        "1. Presence of a handwritten or qualified electronic signature.\n"
+        "2. Document date must be within the last 90 days.\n"
+        "3. Must include a valid German VAT ID (USt-IdNr) if applicable.\n"
+        "4. Must include a valid HRB-Nummer (commercial register number) if applicable.\n"
+        "5. Must include authorized signatories (Vertretungsberechtigte) if applicable.\n\n"
+        f"Document Content:\n{text[:8000]}\n\n"
+        "Respond ONLY with a valid JSON object in this exact format:\n"
+        '{"is_valid": true/false, "errors": ["error1", "error2"], '
+        '"extracted_info": {"vat_id": "...", "hrb_number": "...", '
+        '"signatories": ["name1"], "document_date": "YYYY-MM-DD", "company_name": "..."}}\n'
+        "Use null for fields that are not found. Do not include any text outside the JSON."
+    )
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        res = await client.post(
+            KIMI_API_URL,
+            headers=headers,
+            json={
+                "model": "gpt-4o",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.0,
+                "max_tokens": 1024,
+            },
+        )
+        res.raise_for_status()
+        raw = res.json()["choices"][0]["message"]["content"].strip()
+        # Strip markdown code fences if present
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        return json.loads(raw.strip())
 
 
 async def compare_docs(doc_a_text: str, doc_b_text: str) -> str:

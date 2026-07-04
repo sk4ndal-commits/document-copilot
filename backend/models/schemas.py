@@ -137,3 +137,50 @@ class ConversationOut(BaseModel):
 class ChatHistoryRequest(BaseModel):
     conversation_id: Optional[str] = None
     message: str
+
+
+class ValidationError(BaseModel):
+    field: str
+    message: str
+
+
+class ExtractedInfo(BaseModel):
+    vat_id: Optional[str] = None
+    hrb_number: Optional[str] = None
+    signatories: Optional[List[str]] = None
+    document_date: Optional[str] = None
+    company_name: Optional[str] = None
+
+
+class ValidationResult(BaseModel):
+    is_valid: bool
+    errors: List[str]
+    extracted_info: ExtractedInfo
+
+
+class OnboardingSlotStatus(str, Enum):
+    pending = "pending"
+    uploading = "uploading"
+    validating = "validating"
+    ready = "ready"
+    error = "error"
+
+
+class OnboardingDocumentSlot(BaseModel):
+    slot_id: str
+    doc_type: str
+    label: str
+    status: OnboardingSlotStatus = OnboardingSlotStatus.pending
+    result: Optional[ValidationResult] = None
+
+
+class OnboardingSession(BaseModel):
+    id: str
+    slots: List[OnboardingDocumentSlot]
+    created_at: datetime
+
+
+class ValidateOnboardingResponse(BaseModel):
+    doc_type: str
+    filename: str
+    result: ValidationResult
