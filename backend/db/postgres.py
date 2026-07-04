@@ -2,6 +2,7 @@ import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Enum as SAEnum, Boolean
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from models.schemas import DocumentStatus
@@ -56,6 +57,33 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     tenant_id = Column(String, nullable=False)  # Associates user with a tenant
+
+
+class OnboardingSessionRecord(Base):
+    __tablename__ = "onboarding_sessions"
+
+    id = Column(String, primary_key=True)
+    tenant_id = Column(String, nullable=False, index=True)
+    client_name = Column(String, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    slots = relationship("OnboardingSlotRecord", back_populates="session", cascade="all, delete-orphan")
+
+
+class OnboardingSlotRecord(Base):
+    __tablename__ = "onboarding_slots"
+
+    id = Column(String, primary_key=True)
+    session_id = Column(String, ForeignKey("onboarding_sessions.id"), nullable=False)
+    slot_id = Column(String, nullable=False)
+    doc_type = Column(String, nullable=False)
+    label = Column(String, nullable=False)
+    required = Column(Boolean, default=True)
+    status = Column(String, default="pending")
+    filename = Column(String, nullable=True)
+    validation_result = Column(JSONB, nullable=True)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    session = relationship("OnboardingSessionRecord", back_populates="slots")
 
 
 async def get_db():

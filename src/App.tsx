@@ -26,6 +26,8 @@ function AuthenticatedApp() {
       <Routes>
         <Route path="/" element={<OnboardingWizardPage />} />
         <Route path="/onboarding/wizard" element={<OnboardingWizardPage />} />
+        <Route path="/onboarding" element={<OnboardingWizardPage />} />
+        <Route path="/onboarding/:sessionId" element={<OnboardingWizardPage />} />
         <Route path="/answer" element={<AnswerPage />} />
         <Route path="/documents" element={<DocumentsPage />} />
         <Route path="/admin" element={<AdminPage />} />

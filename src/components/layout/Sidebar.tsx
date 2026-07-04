@@ -68,7 +68,7 @@ export default function Sidebar() {
         </p>
       </div>
       <nav className="flex flex-col space-y-1 mb-6">
-        <NavLink to="/" end className={navLinkClass}>
+        <NavLink to="/onboarding" className={navLinkClass}>
           <IconWizard />
           Onboarding Wizard
         </NavLink>

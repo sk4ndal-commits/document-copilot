@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { OnboardingSlot, ValidationResult } from '../types/onboarding'
 import { validateOnboardingDocument } from '../../../services/api/validation'
+import { fetchSession, updateSlot as persistSlot } from '../../../services/api/onboarding'
 
 const INITIAL_SLOTS: OnboardingSlot[] = [
   {
@@ -37,8 +38,29 @@ const INITIAL_SLOTS: OnboardingSlot[] = [
   },
 ]
 
-export function useOnboardingSession() {
+export function useOnboardingSession(sessionId?: string) {
   const [slots, setSlots] = useState<OnboardingSlot[]>(INITIAL_SLOTS)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!sessionId) return
+    setLoading(true)
+    fetchSession(sessionId)
+      .then(session => {
+        setSlots(session.slots.map(s => ({
+          slot_id: s.slot_id,
+          doc_type: s.doc_type,
+          label: s.label,
+          description: '',
+          required: s.required,
+          status: s.status,
+          filename: s.filename,
+          result: s.result,
+        })))
+      })
+      .catch(() => {/* keep initial slots on error */})
+      .finally(() => setLoading(false))
+  }, [sessionId])
 
   const updateSlot = useCallback((slot_id: string, patch: Partial<OnboardingSlot>) => {
     setSlots(prev => prev.map(s => s.slot_id === slot_id ? { ...s, ...patch } : s))
@@ -54,22 +76,23 @@ export function useOnboardingSession() {
       updateSlot(slot_id, { status: 'validating' })
       const response = await validateOnboardingDocument(file, slot.doc_type)
       const result: ValidationResult = response.result
-      updateSlot(slot_id, {
-        status: result.is_valid ? 'ready' : 'error',
-        result,
-        filename: file.name,
-      })
+      const newStatus = result.is_valid ? 'ready' : 'error'
+      updateSlot(slot_id, { status: newStatus, result, filename: file.name })
+      if (sessionId) {
+        await persistSlot(sessionId, slot_id, { status: newStatus, filename: file.name, result })
+      }
     } catch (err) {
-      updateSlot(slot_id, {
-        status: 'error',
-        result: {
-          is_valid: false,
-          errors: [(err as Error).message || 'Unknown error during validation'],
-          extracted_info: {},
-        },
-      })
+      const errorResult = {
+        is_valid: false,
+        errors: [(err as Error).message || 'Unknown error during validation'],
+        extracted_info: {},
+      }
+      updateSlot(slot_id, { status: 'error', result: errorResult })
+      if (sessionId) {
+        await persistSlot(sessionId, slot_id, { status: 'error', filename: file.name, result: errorResult })
+      }
     }
-  }, [slots, updateSlot])
+  }, [slots, updateSlot, sessionId])
 
   const resetSlot = useCallback((slot_id: string) => {
     updateSlot(slot_id, { status: 'pending', result: undefined, filename: undefined })
@@ -83,5 +106,5 @@ export function useOnboardingSession() {
     return 'pending'
   })()
 
-  return { slots, uploadAndValidate, resetSlot, overallStatus }
+  return { slots, uploadAndValidate, resetSlot, overallStatus, loading }
 }
