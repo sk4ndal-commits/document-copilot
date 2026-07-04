@@ -24,7 +24,7 @@ COPY . .
 
 # Expose the port FastAPI runs on
 # Pre-download the embedding model
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-large-en-v1.5')"
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-m3')"
 
 EXPOSE 8000
 

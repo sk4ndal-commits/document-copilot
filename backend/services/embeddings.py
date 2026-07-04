@@ -7,7 +7,7 @@ _model: SentenceTransformer | None = None
 def _get_model() -> SentenceTransformer:
     global _model
     if _model is None:
-        model_name = os.getenv("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5")
+        model_name = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
         _model = SentenceTransformer(model_name)
     return _model
 

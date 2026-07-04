@@ -11,7 +11,7 @@ from qdrant_client.models import (
 )
 
 COLLECTION = "documents"
-VECTOR_SIZE = 1024  # bge-large-en-v1.5 output dimension
+VECTOR_SIZE = 1024  # bge-m3 output dimension
 
 _client: QdrantClient | None = None
 
