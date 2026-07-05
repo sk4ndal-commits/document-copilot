@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchAdminStatus, fetchAdminMetrics, fetchAdminUsers, fetchComplianceIssues, createCategory, AdminStatus, AdminMetrics, User } from '../services/api'
 import { fetchCategories } from '../services/api/documents'
+import { fetchValidationHistory, ValidationHistoryEntry } from '../services/api/admin'
 
 export default function AdminPage() {
   const [searchParams] = useSearchParams()
@@ -10,6 +11,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([])
   const [gaps, setGaps] = useState<string[]>([])
   const [categories, setCategories] = useState<any[]>([])
+  const [validationHistory, setValidationHistory] = useState<ValidationHistoryEntry[]>([])
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview')
   const [newCatName, setNewCatName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -20,14 +22,16 @@ export default function AdminPage() {
       fetchAdminMetrics(), 
       fetchAdminUsers(), 
       fetchComplianceIssues(),
-      fetchCategories()
+      fetchCategories(),
+      fetchValidationHistory(),
     ])
-      .then(([s, m, u, g, c]) => {
+      .then(([s, m, u, g, c, vh]) => {
         setStatus(s)
         setMetrics(m)
         setUsers(u)
         setGaps(g)
         setCategories(c)
+        setValidationHistory(vh)
       })
       .catch(console.error)
       .finally(() => setLoading(false))
@@ -59,7 +63,7 @@ export default function AdminPage() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Admin Portal</h2>
         <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-          {['overview', 'categories', 'users'].map(tab => (
+          {['overview', 'categories', 'users', 'history'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -204,6 +208,55 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+          </section>
+        </div>
+      )}
+
+      {activeTab === 'history' && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <section>
+            <h3 className="text-sm font-semibold mb-4 text-gray-500 uppercase tracking-wider">Validation History</h3>
+            {validationHistory.length === 0 ? (
+              <div className="bg-white border border-border rounded-xl p-8 text-center text-sm text-gray-400 shadow-sm">
+                No validation events recorded yet.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {validationHistory.map(entry => (
+                  <div
+                    key={entry.id}
+                    className={`bg-white border rounded-xl px-5 py-4 shadow-sm flex items-start gap-4 ${
+                      entry.is_valid ? 'border-green-200' : 'border-red-200'
+                    }`}
+                  >
+                    <span className="text-lg mt-0.5">{entry.is_valid ? '✅' : '❌'}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-medium text-gray-900 truncate">
+                          {entry.filename ?? 'Unknown file'}
+                        </span>
+                        <span className="text-xs text-gray-400 shrink-0">
+                          {new Date(entry.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {entry.doc_type ?? '—'}
+                        {entry.session_id && (
+                          <span className="ml-2 text-gray-400">Session: {entry.session_id.slice(0, 8)}…</span>
+                        )}
+                      </div>
+                      {!entry.is_valid && entry.missing_fields && entry.missing_fields.length > 0 && (
+                        <ul className="mt-1.5 space-y-0.5">
+                          {entry.missing_fields.map((f, i) => (
+                            <li key={i} className="text-xs text-red-600">• {f}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       )}

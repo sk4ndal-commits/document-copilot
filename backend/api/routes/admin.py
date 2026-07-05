@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text
-from db.postgres import get_db, Message, Conversation
+from db.postgres import get_db, Message, Conversation, ValidationResultRecord
 from db.tenants import schema_name
 from models.schemas import AdminStatus, AdminMetrics, UserOut
 
@@ -27,11 +27,10 @@ async def get_admin_status():
 async def get_metrics(request: Request, db: AsyncSession = Depends(get_db)):
     tenant_id = request.state.tenant_id
     
-    # 1. Validation Activity: Count messages in conversations of this tenant
+    # 1. Validation Activity: Count rows from validation_results table (real audit trail)
     search_count_res = await db.execute(
-        select(func.count(Message.id))
-        .join(Conversation)
-        .where(Conversation.tenant_id == tenant_id)
+        select(func.count(ValidationResultRecord.id))
+        .where(ValidationResultRecord.tenant_id == tenant_id)
     )
     search_count = search_count_res.scalar() or 0
     
@@ -89,4 +88,29 @@ async def list_users(request: Request):
     # For now, return a mock user representing the current session
     return [
         UserOut(id="user_1", username="admin_user", roles=request.state.roles)
+    ]
+
+
+@router.get("/admin/validation-history")
+async def get_validation_history(request: Request, db: AsyncSession = Depends(get_db)):
+    tenant_id = request.state.tenant_id
+    result = await db.execute(
+        select(ValidationResultRecord)
+        .where(ValidationResultRecord.tenant_id == tenant_id)
+        .order_by(ValidationResultRecord.created_at.desc())
+        .limit(50)
+    )
+    rows = result.scalars().all()
+    return [
+        {
+            "id": r.id,
+            "session_id": r.session_id,
+            "doc_type": r.doc_type,
+            "filename": r.filename,
+            "is_valid": r.is_valid,
+            "missing_fields": r.missing_fields,
+            "extracted_info": r.extracted_info,
+            "created_at": r.created_at.isoformat(),
+        }
+        for r in rows
     ]

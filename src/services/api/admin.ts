@@ -43,6 +43,23 @@ export async function fetchComplianceIssues(): Promise<string[]> {
   return res.json()
 }
 
+export interface ValidationHistoryEntry {
+  id: string
+  session_id: string | null
+  doc_type: string | null
+  filename: string | null
+  is_valid: boolean
+  missing_fields: string[] | null
+  extracted_info: Record<string, unknown> | null
+  created_at: string
+}
+
+export async function fetchValidationHistory(): Promise<ValidationHistoryEntry[]> {
+  const res = await apiFetch('/api/admin/validation-history')
+  if (!res.ok) return []
+  return res.json()
+}
+
 export async function createCategory(name: string, color?: string): Promise<any> {
   const res = await apiFetch('/api/admin/categories', {
     method: 'POST',

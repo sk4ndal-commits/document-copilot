@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from db.postgres import get_db, OnboardingSessionRecord, OnboardingSlotRecord
+from db.postgres import get_db, OnboardingSessionRecord, OnboardingSlotRecord, ValidationResultRecord
 from services import validation as validation_service
 from services import llm
 
@@ -234,6 +234,20 @@ async def public_upload_slot(
     slot.filename = file.filename
     slot.validation_result = validation_result
     slot.updated_at = datetime.now(timezone.utc)
+
+    # ── Persist audit trail ──────────────────────────────────────────────────
+    vr = ValidationResultRecord(
+        id=str(uuid.uuid4()),
+        session_id=session.id,
+        tenant_id=session.tenant_id,
+        doc_type=slot.doc_type,
+        filename=file.filename,
+        is_valid=validation_result["is_valid"],
+        missing_fields=validation_result.get("errors", []),
+        extracted_info=validation_result.get("extracted_info", {}),
+        compliance_notes=None,
+    )
+    db.add(vr)
     await db.commit()
 
     return {

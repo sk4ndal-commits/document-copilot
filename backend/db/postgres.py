@@ -87,6 +87,22 @@ class OnboardingSlotRecord(Base):
     session = relationship("OnboardingSessionRecord", back_populates="slots")
 
 
+class ValidationResultRecord(Base):
+    __tablename__ = "validation_results"
+
+    id = Column(String, primary_key=True)
+    session_id = Column(String, nullable=True)
+    doc_id = Column(String, nullable=True)
+    tenant_id = Column(String, nullable=False, index=True)
+    doc_type = Column(String, nullable=True)
+    filename = Column(String, nullable=True)
+    is_valid = Column(Boolean, nullable=False)
+    missing_fields = Column(JSONB, nullable=True)
+    extracted_info = Column(JSONB, nullable=True)
+    compliance_notes = Column(JSONB, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
