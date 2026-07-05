@@ -11,6 +11,7 @@ from sqlalchemy.orm import selectinload
 from db.postgres import get_db, OnboardingSessionRecord, OnboardingSlotRecord, ValidationResultRecord
 from services import validation as validation_service
 from services import llm
+from services import email as email_service
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
 
@@ -40,6 +41,8 @@ async def create_session(request: Request, db: AsyncSession = Depends(get_db)):
     tenant_id = request.state.tenant_id
     body = await request.json()
     client_name = body.get("client_name", "")
+    assigned_sales_rep_email = body.get("assigned_sales_rep_email", "")
+    client_email = body.get("client_email", "")
 
     session_id = str(uuid.uuid4())
     share_token = str(uuid.uuid4())
@@ -48,6 +51,8 @@ async def create_session(request: Request, db: AsyncSession = Depends(get_db)):
         tenant_id=tenant_id,
         client_name=client_name,
         share_token=share_token,
+        assigned_sales_rep_email=assigned_sales_rep_email,
+        client_email=client_email,
     )
     db.add(session)
 
@@ -248,6 +253,31 @@ async def public_upload_slot(
         compliance_notes=None,
     )
     db.add(vr)
+
+    # ── Email notifications ──────────────────────────────────────────────────
+    if not validation_result["is_valid"] and session.client_email:
+        try:
+            email_service.send_slot_invalid(
+                client_email=session.client_email,
+                doc_label=slot.label,
+                missing_fields=validation_result.get("errors", []),
+            )
+        except Exception:
+            pass
+
+    all_required_ready = all(
+        s.status == "ready" for s in session.slots if s.required
+    )
+    if all_required_ready and session.assigned_sales_rep_email:
+        try:
+            email_service.send_onboarding_complete(
+                sales_rep_email=session.assigned_sales_rep_email,
+                client_name=session.client_name or "Unknown client",
+                session_id=session.id,
+            )
+        except Exception:
+            pass
+
     await db.commit()
 
     return {

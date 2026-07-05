@@ -29,10 +29,18 @@ export interface SessionDetail {
   slots: SlotState[]
 }
 
-export async function createSession(clientName: string): Promise<{ id: string; share_token: string }> {
+export async function createSession(
+  clientName: string,
+  assignedSalesRepEmail?: string,
+  clientEmail?: string,
+): Promise<{ id: string; share_token: string }> {
   const res = await apiFetch('/api/onboarding/sessions', {
     method: 'POST',
-    body: JSON.stringify({ client_name: clientName }),
+    body: JSON.stringify({
+      client_name: clientName,
+      assigned_sales_rep_email: assignedSalesRepEmail ?? '',
+      client_email: clientEmail ?? '',
+    }),
     headers: { 'Content-Type': 'application/json' },
   })
   return res.json()

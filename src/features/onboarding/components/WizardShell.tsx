@@ -23,9 +23,11 @@ export default function WizardShell() {
   const handleNewSession = async () => {
     const clientName = prompt('Client company name (e.g. Mustermann GmbH):') ?? ''
     if (clientName === null) return
+    const salesRepEmail = prompt('Sales rep email (optional, for completion notification):') ?? ''
+    const clientEmail = prompt('Client email (optional, for correction notifications):') ?? ''
     setCreating(true)
     try {
-      const { id, share_token } = await createSession(clientName)
+      const { id, share_token } = await createSession(clientName, salesRepEmail, clientEmail)
       setShareUrl(`${window.location.origin}/onboarding/submit/${share_token}`)
       navigate(`/onboarding/${id}`)
     } finally {
