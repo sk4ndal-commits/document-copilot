@@ -4,6 +4,7 @@ import { useOnboardingSession } from '../hooks/useOnboardingSession'
 import DocumentSlot from './DocumentSlot'
 import ComplianceHealthDashboard from './ComplianceHealthDashboard'
 import { createSession, fetchSessions, SessionSummary } from '../../../services/api/onboarding'
+import CrossCheckPanel from './CrossCheckPanel'
 
 export default function WizardShell() {
   const { sessionId } = useParams<{ sessionId?: string }>()
@@ -115,7 +116,7 @@ export default function WizardShell() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" id="slot-grid">
         <div className="lg:col-span-2 space-y-4">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Required Documents</h2>
           {slots.filter(s => s.required).map(slot => (
@@ -148,6 +149,13 @@ export default function WizardShell() {
           </div>
         </div>
       </div>
+
+      {sessionId && (
+        <CrossCheckPanel
+          sessionId={sessionId}
+          allSlotsReady={slots.filter(s => s.required).every(s => s.status === 'ready')}
+        />
+      )}
     </div>
   )
 }

@@ -62,6 +62,29 @@ export async function updateSlot(
   })
 }
 
+// ─── Cross-document consistency check ────────────────────────────────────────
+
+export interface ConsistencyDiscrepancy {
+  field: string
+  details: string
+}
+
+export interface ConsistencyReport {
+  consistent: boolean
+  discrepancies: ConsistencyDiscrepancy[]
+}
+
+export async function runCrossCheck(sessionId: string): Promise<ConsistencyReport> {
+  const res = await apiFetch(`/api/onboarding/sessions/${sessionId}/cross-check`, {
+    method: 'POST',
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error((err as { detail?: string }).detail ?? 'Cross-check failed')
+  }
+  return res.json()
+}
+
 // ─── Public (unauthenticated) helpers ────────────────────────────────────────
 
 const BASE = (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL ?? ''

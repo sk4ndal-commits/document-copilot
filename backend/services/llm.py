@@ -143,6 +143,43 @@ async def validate_legal_document(text: str, doc_type: str) -> dict:
         return json.loads(raw.strip())
 
 
+async def cross_check_consistency(extracted_infos: list[dict]) -> dict:
+    """Compare extracted info across all validated onboarding documents for discrepancies."""
+    infos_json = json.dumps(extracted_infos, indent=2, ensure_ascii=False)
+    prompt = (
+        "You are a German Legal Compliance Auditor performing a cross-document consistency check.\n"
+        "You are given extracted metadata from multiple legal documents in a single onboarding session.\n"
+        "Compare the following fields across ALL documents:\n"
+        "- company_name\n"
+        "- vat_id (USt-IdNr)\n"
+        "- hrb_number\n"
+        "- signatories\n\n"
+        "Identify any discrepancies (e.g. different VAT IDs, different company names, different signatories).\n"
+        "Respond ONLY with a valid JSON object in this exact format:\n"
+        '{"consistent": true/false, "discrepancies": [{"field": "vat_id", "details": "Doc A has DE123, Doc B has DE456"}]}\n'
+        "Use an empty list for discrepancies if everything is consistent. Do not include any text outside the JSON.\n\n"
+        f"Extracted document metadata:\n{infos_json}"
+    )
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        res = await client.post(
+            KIMI_API_URL,
+            headers=headers,
+            json={
+                "model": "gpt-4o",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.0,
+                "max_tokens": 1024,
+            },
+        )
+        res.raise_for_status()
+        raw = res.json()["choices"][0]["message"]["content"].strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        return json.loads(raw.strip())
+
+
 async def compare_docs(doc_a_text: str, doc_b_text: str) -> str:
     """Compare an uploaded document against an approved company template (Golden Standard)."""
     prompt = (

@@ -184,3 +184,13 @@ class ValidateOnboardingResponse(BaseModel):
     doc_type: str
     filename: str
     result: ValidationResult
+
+
+class ConsistencyDiscrepancy(BaseModel):
+    field: str
+    details: str
+
+
+class ConsistencyReport(BaseModel):
+    consistent: bool
+    discrepancies: List[ConsistencyDiscrepancy]

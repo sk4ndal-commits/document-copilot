@@ -10,6 +10,7 @@ from sqlalchemy.orm import selectinload
 
 from db.postgres import get_db, OnboardingSessionRecord, OnboardingSlotRecord
 from services import validation as validation_service
+from services import llm
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
 
@@ -241,3 +242,42 @@ async def public_upload_slot(
         "filename": slot.filename,
         "result": validation_result,
     }
+
+
+@router.post("/onboarding/sessions/{session_id}/cross-check")
+async def cross_check_session(
+    session_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    tenant_id = request.state.tenant_id
+    result = await db.execute(
+        select(OnboardingSessionRecord)
+        .options(selectinload(OnboardingSessionRecord.slots))
+        .where(
+            OnboardingSessionRecord.id == session_id,
+            OnboardingSessionRecord.tenant_id == tenant_id,
+        )
+    )
+    session = result.scalar_one_or_none()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    ready_slots = [
+        s for s in session.slots
+        if s.status == "ready" and s.validation_result and s.validation_result.get("extracted_info")
+    ]
+
+    if len(ready_slots) < 2:
+        raise HTTPException(
+            status_code=422,
+            detail="At least 2 validated slots are required for a cross-check."
+        )
+
+    extracted_infos = [
+        {"doc_type": s.doc_type, **s.validation_result["extracted_info"]}
+        for s in ready_slots
+    ]
+
+    report = await llm.cross_check_consistency(extracted_infos)
+    return report
